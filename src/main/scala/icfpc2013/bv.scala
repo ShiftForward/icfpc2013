@@ -23,7 +23,7 @@ object One extends Expression {
   def size = 1
   def operators = Set()
 }
-case class Id(val s: String) extends AnyVal with Expression {
+case class Id(s: String) extends AnyVal with Expression {
   override def toString = s
   def size = 1
   def operators = Set()
