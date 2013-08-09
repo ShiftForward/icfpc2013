@@ -4,15 +4,14 @@ import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.io.IO
 import akka.event.Logging
+import java.io.PrintStream
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 import spray.can.Http
 import spray.client.pipelining._
 import spray.http._
 import spray.http.Uri._
 import spray.httpx.SprayJsonSupport._
-import java.io.PrintStream
-import scala.concurrent.Future
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling.Unmarshaller
 
