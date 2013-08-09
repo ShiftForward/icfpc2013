@@ -49,9 +49,12 @@ object Client {
 
   def problems = post[String, List[Problem]]("myproblems", "").map { probs =>
     val out = new PrintStream("problems.csv")
-    out.println("ID,Size,Operators")
+    out.println("ID,Size,Operators,Solved")
     probs.map { p =>
-      "%s,%s,\"%s\"".format(p.id, p.size, p.operators.mkString(", "))
+      "%s,%s,\"%s\",%s".format(
+        p.id,
+        p.size, p.operators.mkString(", "),
+        p.solved.map(_.toString).getOrElse(""))
     }.foreach(out.println)
     out.close()
     log.info("Problems written to problems.csv")
