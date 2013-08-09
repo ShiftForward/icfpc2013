@@ -31,7 +31,7 @@ object BvCompiler {
     case Op1(op, x) =>
       op match {
         case Not =>
-          ctx => ~(apply(x)(ctx))
+          ctx => ~apply(x)(ctx)
         case Shl1 =>
           ctx => apply(x)(ctx) << 1
         case Shr1 =>
@@ -49,8 +49,9 @@ object BvCompiler {
           ctx => apply(x)(ctx) | apply(y)(ctx)
         case Xor =>
           ctx => apply(x)(ctx) ^ apply(y)(ctx)
-        case Plus => // FIXME: should be unsigned
-          ctx => apply(x)(ctx) + apply(y)(ctx)
+        case Plus =>
+          ctx => (BigInt(apply(x)(ctx).toHexString, 16) +
+            BigInt(apply(y)(ctx).toHexString, 16)).longValue()
       }
   }
 
