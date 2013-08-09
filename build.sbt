@@ -11,3 +11,6 @@ startYear := Some(2013)
 scalaVersion := "2.10.2"
 
 scalacOptions := Seq("-deprecation", "-encoding", "utf8")
+
+libraryDependencies ++= Seq(
+  "io.spray" %%  "spray-json" % "1.2.5")
