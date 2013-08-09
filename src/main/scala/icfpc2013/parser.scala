@@ -18,8 +18,8 @@ object BvParser extends RegexParsers {
       If(cond, tthen, eelse)
   }
   def fold = "(" ~> "fold" ~> exp ~ exp ~ ("(" ~> "lambda" ~> "(" ~> id) ~ (id <~ ")") ~ exp <~ ")" <~ ")" ^^ {
-    case xs ~ z ~ acc ~ x ~ exp =>
-      Fold(xs, z, acc, x, exp)
+    case xs ~ z ~ x ~ acc ~ exp =>
+      Fold(xs, z, x, acc, exp)
   }
   def op =
     "(" ~> op1 ~ exp <~ ")" ^^ { case op ~ x => Op1(op, x) } |
