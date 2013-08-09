@@ -33,8 +33,8 @@ case class If(cond: Expression, tthen: Expression, eelse: Expression) extends Ex
   def size = 1 + cond.size + tthen.size + eelse.size
   def operators = Set[Operator](If0) union cond.operators union tthen.operators union eelse.operators
 }
-case class Fold(xs: Expression, z: Expression, acc: Id, x: Id, exp: Expression) extends Expression {
-  override def toString = s"(fold $xs $z (lambda ($acc $x) $exp))"
+case class Fold(xs: Expression, z: Expression, x: Id, acc: Id, exp: Expression) extends Expression {
+  override def toString = s"(fold $xs $z (lambda ($x $acc) $exp))"
   def size = 2 + xs.size + z.size + exp.size
   def operators = Set[Operator](Fold0) union xs.operators union z.operators union exp.operators
 }
