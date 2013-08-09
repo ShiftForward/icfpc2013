@@ -23,4 +23,4 @@ initialCommands in console := """
       import icfpc2013.Client._;
       import icfpc2013.JsonApi._;
       import spray.util._;
-"""
+      import icfpc2013._;"""
