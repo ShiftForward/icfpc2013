@@ -11,10 +11,27 @@ object PlotSolver {
   val inputs = (1 until 256).scanLeft(0L) { (acc, _) => acc + step }
   val hexInputs = inputs.map { n => "0x" + "%1$16s".format(n.toHexString).replace(' ', '0') }
 
-  def closeTo(n1: Double, n2: Double, prec: Double = 0.0001) = Math.abs(n1 - n2) < prec
-  def longHexToDouble(hex: String) = BigInt(hex.drop(2), 16).doubleValue()
+  def genSolveAndGuess(): Option[GuessResponse] = {
+    val train = Client.train(TrainRequest(Some(3), None)).await
+    println("Problem ID is " + train.id + " - " + train.challenge)
+    solveAndGuess(train.id)
+  }
 
-  def solve(problemId: String): Double = {
+  def solveAndGuess(problemId: String): Option[GuessResponse] = {
+    val inputId = Id("in")
+
+    solve(problemId, inputId) match {
+      case None =>
+        println("Unknown function!")
+        None
+
+      case Some(expr) =>
+        val prog = Program(inputId, expr)
+        Some(Client.guess(Guess(problemId, prog.toString)).await)
+    }
+  }
+
+  def solve(problemId: String, inputId: Id = Id("in")): Option[Expression] = {
     implicit val timeout = 10 seconds
     val response = Client.eval(EvalRequest(Some(problemId), None, hexInputs.toList)).await
 
@@ -33,17 +50,26 @@ object PlotSolver {
     val factor = (Math.log(params(1)) / Math.log(2)).toInt
 
     if(closeTo(factor, factor.toInt)) {
-      if(factor > 0) println("Operator is shl" + factor)
-      else if(factor < 0) println("Operator is shr" + -factor)
-      else if(params(1) == 1) println("Operator is identity")
-      else if(params(1) == -1 && closeTo(params(0), longHexToDouble("0xFFFFFFFFFFFFFFFF"))) println("Operator is not")
-
-    } else {
-      println("Operator is other thing")
-    }
-
-    params(1)
+      if(factor > 0 && closeTo(params(0), 0)) Some(shl(inputId, factor))
+      else if(factor < 0 && closeTo(params(0), 0)) Some(shr(inputId, -factor))
+      else if(params(1) == 1 && closeTo(params(0), 0)) Some(inputId)
+      else if(params(1) == -1 && closeTo(params(0), longHexToDouble("0xFFFFFFFFFFFFFFFF"))) Some(Op1(Not, inputId))
+      else None
+    } else None
   }
+
+  private[this] def closeTo(n1: Double, n2: Double, prec: Double = 0.0001) = Math.abs(n1 - n2) < prec
+  private[this] def longHexToDouble(hex: String) = BigInt(hex.drop(2), 16).doubleValue()
+
+  private[this] def shl(expr: Expression, b: Int): Expression =
+    if(b == 0) expr
+    else shr(Op1(Shl1, expr), b - 1)
+
+  private[this] def shr(expr: Expression, b: Int): Expression =
+    if(b == 0) expr
+    else if(b >= 16) shr(Op1(Shr16, expr), b - 16)
+    else if(b >= 4) shr(Op1(Shr4, expr), b - 4)
+    else shr(Op1(Shr1, expr), b - 1)
 }
 
 case class LinearRegression(inputs: Seq[Long], outputs: Seq[Double]) {
