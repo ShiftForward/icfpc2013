@@ -25,7 +25,7 @@ object BvParser extends RegexParsers {
     "(" ~> op1 ~ exp <~ ")" ^^ { case op ~ x => Op1(op, x) } |
     "(" ~> op2 ~ exp ~ exp <~ ")" ^^ { case op ~ x ~ y => Op2(op, x, y) }
 
-  def op1 = not | shl1 | shr1 | shr4 | shr16
+  def op1 = not | shl1 | shr16 | shr4 | shr1
   def not = "not" ^^^ Not
   def shl1 = "shl1" ^^^ Shl1
   def shr1 = "shr1" ^^^ Shr1
