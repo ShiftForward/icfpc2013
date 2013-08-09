@@ -10,6 +10,7 @@ object PlotSolver {
   val step = 1L << 32
   val inputs = (1 until 256).scanLeft(0L) { (acc, _) => acc + step }
   val hexInputs = inputs.map { n => "0x" + "%1$16s".format(n.toHexString).replace(' ', '0') }
+  val csvScale = 0x100000L
 
   def batchSolve(probs: List[Problem], remTime: Int = 2): Boolean = probs match {
     case Nil => println("All problems solved successfully!"); true
@@ -34,8 +35,8 @@ object PlotSolver {
       }
   }
 
-  def genSolveAndGuess(): Option[GuessResponse] = {
-    val train = Client.train(TrainRequest(Some(3), None)).await
+  def genSolveAndGuess(trainReq: TrainRequest = TrainRequest(Some(3), None)): Option[GuessResponse] = {
+    val train = Client.train(trainReq).await
     println("Problem ID is " + train.id + " - " + train.challenge)
     solveAndGuess(train.id)
   }
@@ -64,7 +65,7 @@ object PlotSolver {
     val pairs = inputs.zip(outputs)
 
     val out = new PrintStream("func_chart.csv")
-    out.println(pairs.map { case (i, o) => i / 0x100000 + "," + o / 0x100000 }.mkString("\n"))
+    out.println(pairs.map { case (i, o) => i / csvScale + "," + o / csvScale }.mkString("\n"))
     out.close()
 
     val params = LinearRegression(inputs, outputs).calc
