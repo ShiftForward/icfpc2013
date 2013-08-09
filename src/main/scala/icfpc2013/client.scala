@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.io.IO
 import akka.event.Logging
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Success, Failure}
 import spray.can.Http
@@ -12,24 +11,26 @@ import spray.client.pipelining._
 import spray.http._
 import spray.http.Uri._
 import spray.httpx.SprayJsonSupport._
-import spray.util._
-
-import JsonApi._
 import java.io.PrintStream
+import scala.concurrent.{Await, Future}
 
-object Client extends App {
-  val token = "INSERT_TOKEN_HERE"
+object Client {
+  import spray.util._
+  import JsonApi._
+
+  val token = "YOUR_TOKEN_HERE"
   val suffix = "vpsH1H"
   val hostname = "icfpc2013.cloudapp.net"
 
-  implicit val system = ActorSystem()
+  implicit lazy val system = ActorSystem()
   import system.dispatcher
   val log = Logging(system, getClass)
 
-  // status
-  problems
+  implicit val timeout = 10 seconds
 
-  def status {
+  def await[T](f: Future[T]) = Await.result(f, timeout)
+
+  def status: Future[Status] = {
     val pipeline = sendReceive ~> unmarshal[Status]
     val response = pipeline(
       Post(
@@ -41,18 +42,15 @@ object Client extends App {
 
     response.onComplete {
       case Success(status: Status) =>
-        log.info(status.toString)
-        shutdown()
       case Success(unexpected) =>
         log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
-        shutdown()
       case Failure(error) =>
         log.error(error, "Something went wrong.")
-        shutdown()
     }
+    response
   }
 
-  def problems {
+  def problems: Future[List[Problem]] = {
     val pipeline = sendReceive ~> unmarshal[List[Problem]]
     val response = pipeline(
       Post(
@@ -71,14 +69,32 @@ object Client extends App {
         }.foreach(out.println)
         out.close()
         log.info("Problems written to problems.csv")
-        shutdown()
       case Success(unexpected) =>
         log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
-        shutdown()
       case Failure(error) =>
         log.error(error, "Something went wrong.")
-        shutdown()
     }
+    response
+  }
+
+  def train(tr: TrainRequest): Future[TrainingProblem] = {
+    val pipeline = sendReceive ~> unmarshal[TrainingProblem]
+    val response = pipeline(
+      Post(
+        Uri.from(
+          scheme = "http",
+          host = hostname,
+          path = "/train",
+          query = Query("auth" -> (token + suffix))), tr))
+
+    response.onComplete {
+      case Success(tp: TrainingProblem) =>
+      case Success(unexpected) =>
+        log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
+      case Failure(error) =>
+        log.error(error, "Something went wrong.")
+    }
+    response
   }
 
   def shutdown(): Unit = {
