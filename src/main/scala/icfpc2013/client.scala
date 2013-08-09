@@ -15,6 +15,7 @@ import spray.httpx.SprayJsonSupport._
 import spray.util._
 
 import JsonApi._
+import java.io.PrintStream
 
 object Client extends App {
   val token = "INSERT_TOKEN_HERE"
@@ -25,9 +26,10 @@ object Client extends App {
   import system.dispatcher
   val log = Logging(system, getClass)
 
-  status
+  // status
+  problems
 
-  def status = {
+  def status {
     val pipeline = sendReceive ~> unmarshal[Status]
     val response = pipeline(
       Post(
@@ -40,6 +42,35 @@ object Client extends App {
     response.onComplete {
       case Success(status: Status) =>
         log.info(status.toString)
+        shutdown()
+      case Success(unexpected) =>
+        log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
+        shutdown()
+      case Failure(error) =>
+        log.error(error, "Something went wrong.")
+        shutdown()
+    }
+  }
+
+  def problems {
+    val pipeline = sendReceive ~> unmarshal[List[Problem]]
+    val response = pipeline(
+      Post(
+        Uri.from(
+          scheme = "http",
+          host = hostname,
+          path = "/myproblems",
+          query = Query("auth" -> (token + suffix)))))
+
+    response.onComplete {
+      case Success(probs: List[Problem]) =>
+        val out = new PrintStream("problems.csv")
+        out.println("ID,Size,Operators")
+        probs.map { p =>
+          "%s,%s,\"%s\"".format(p.id, p.size, p.operators.mkString(", "))
+        }.foreach(out.println)
+        out.close()
+        log.info("Problems written to problems.csv")
         shutdown()
       case Success(unexpected) =>
         log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
