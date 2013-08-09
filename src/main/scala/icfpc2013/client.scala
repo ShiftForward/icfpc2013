@@ -4,15 +4,14 @@ import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.io.IO
 import akka.event.Logging
+import java.io.PrintStream
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 import spray.can.Http
 import spray.client.pipelining._
 import spray.http._
 import spray.http.Uri._
 import spray.httpx.SprayJsonSupport._
-import java.io.PrintStream
-import scala.concurrent.Future
 import spray.httpx.marshalling.Marshaller
 import spray.httpx.unmarshalling.Unmarshaller
 
@@ -38,25 +37,24 @@ object Client {
           scheme = "http",
           host = hostname,
           path = "/" + endpoint,
-          query = Query("auth" -> (token + suffix)))))
+          query = Query("auth" -> (token + suffix))), body))
 
-    response.onComplete {
-      case Success(resp: Resp) =>
-      case Success(unexpected) =>
-        log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
-      case Failure(error) =>
-        log.error(error, "Something went wrong.")
+    response.onFailure {
+      case e: Exception => log.error(e, "Something went wrong.")
     }
     response
   }
 
   def status = post[String, Status]("status", "")
 
-  def problems = post[String, List[Problem]]("problems", "").map { probs =>
+  def problems = post[String, List[Problem]]("myproblems", "").map { probs =>
     val out = new PrintStream("problems.csv")
-    out.println("ID,Size,Operators")
+    out.println("ID,Size,Operators,Solved")
     probs.map { p =>
-      "%s,%s,\"%s\"".format(p.id, p.size, p.operators.mkString(", "))
+      "%s,%s,\"%s\",%s".format(
+        p.id,
+        p.size, p.operators.mkString(", "),
+        p.solved.map(_.toString).getOrElse(""))
     }.foreach(out.println)
     out.close()
     log.info("Problems written to problems.csv")
@@ -64,6 +62,7 @@ object Client {
   }
 
   def train = post[TrainRequest, TrainingProblem]("train", _: TrainRequest)
+  def eval = post[EvalRequest, EvalResponse]("eval", _: EvalRequest)
   def guess = post[Guess, GuessResponse]("guess", _: Guess)
 
   def shutdown(): Unit = {
