@@ -11,6 +11,29 @@ object PlotSolver {
   val inputs = (1 until 256).scanLeft(0L) { (acc, _) => acc + step }
   val hexInputs = inputs.map { n => "0x" + "%1$16s".format(n.toHexString).replace(' ', '0') }
 
+  def batchSolve(probs: List[Problem], remTime: Int = 2): Boolean = probs match {
+    case Nil => println("All problems solved successfully!"); true
+    case p :: ps =>
+      solveAndGuess(p.id) match {
+        case None => println("A problem occurred solving problem " + p.id); false
+        case Some(guess) =>
+           if(guess.status == "win") {
+             println("Solved problem " + p.id)
+             if(remTime == 1) {
+               Thread.sleep(20000)
+               batchSolve(ps, 2)
+             } else {
+               batchSolve(ps, remTime - 1)
+             }
+           }
+           else {
+             println("A problem occurred solving problem " + p.id)
+             println("Guess response: " + guess)
+             false
+           }
+      }
+  }
+
   def genSolveAndGuess(): Option[GuessResponse] = {
     val train = Client.train(TrainRequest(Some(3), None)).await
     println("Problem ID is " + train.id + " - " + train.challenge)
