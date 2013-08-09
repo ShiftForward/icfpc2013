@@ -39,7 +39,7 @@ case class TrainingProblem(
   operators: List[String])
 
 case class Status(
-  easyChairId: Int,
+  easyChairId: String,
   contestScore: Int,
   lightningScore: Int,
   trainingScore: Int,
