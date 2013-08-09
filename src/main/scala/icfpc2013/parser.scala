@@ -38,8 +38,13 @@ object BvParser extends RegexParsers {
   def xor = "xor" ^^^ Xor
   def plus = "plus" ^^^ Plus
 
-  def apply(input: String): Program = parseAll(program, input) match {
-    case Success(result, _) => result
-    case failure: NoSuccess => scala.sys.error(failure.msg)
+  def apply(input: String): Option[Program] = parseAll(program, input) match {
+    case Success(result, _) => Some(result)
+    case failure: NoSuccess =>
+      println("error: " + failure.msg)
+      println(input.split("\n").map("\t" + _).mkString("\n"))
+      print("\t")
+      println((1 until failure.next.pos.column).map(_ => " ").mkString + "^")
+      None
   }
 }
