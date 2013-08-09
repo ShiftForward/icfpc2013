@@ -48,7 +48,7 @@ object Client {
 
   def status = post[String, Status]("status", "")
 
-  def problems = post[String, List[Problem]]("problems", "").map { probs =>
+  def problems = post[String, List[Problem]]("myproblems", "").map { probs =>
     val out = new PrintStream("problems.csv")
     out.println("ID,Size,Operators")
     probs.map { p =>
@@ -60,6 +60,7 @@ object Client {
   }
 
   def train = post[TrainRequest, TrainingProblem]("train", _: TrainRequest)
+  def eval = post[EvalRequest, EvalResponse]("eval", _: EvalRequest)
   def guess = post[Guess, GuessResponse]("guess", _: Guess)
 
   def shutdown(): Unit = {
