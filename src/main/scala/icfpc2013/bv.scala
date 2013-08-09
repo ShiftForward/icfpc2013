@@ -90,7 +90,7 @@ object Plus extends Operator2 {
   override def toString = "plus"
 }
 
-object Test extends App {
+object Bv extends App {
   val program =
     Program(Id("x"), Fold(Id("x"), Zero, Id("y"), Id("z"), Op2(Or, Id("y"), Id("z"))))
   println("Program: " + program)

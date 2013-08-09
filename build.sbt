@@ -12,5 +12,9 @@ scalaVersion := "2.10.2"
 
 scalacOptions := Seq("-deprecation", "-encoding", "utf8")
 
+resolvers += "spray repo" at "http://repo.spray.io"
+
 libraryDependencies ++= Seq(
-  "io.spray" %%  "spray-json" % "1.2.5")
+  "com.typesafe.akka" %% "akka-actor"   % "2.2.0-RC1",
+  "io.spray"           % "spray-client" % "1.2-M8",
+  "io.spray"          %% "spray-json"   % "1.2.5")
