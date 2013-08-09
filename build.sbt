@@ -18,3 +18,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor"   % "2.2.0-RC1",
   "io.spray"           % "spray-client" % "1.2-M8",
   "io.spray"          %% "spray-json"   % "1.2.5")
+
+initialCommands in console := """
+      import icfpc2013.Client._;
+      import icfpc2013.JsonApi._;
+      import spray.util._;
+      import icfpc2013._;"""
