@@ -3,7 +3,7 @@ package icfpc2013
 import scala.util.parsing.combinator.RegexParsers
 
 object BvParser extends RegexParsers {
-  def program = ("(lambda(" ~> id <~ ")") ~ exp <~ ")" ^^ {
+  def program = ("(" ~> "lambda" ~> "(" ~> id <~ ")") ~ exp <~ ")" ^^ {
     case id ~ expression =>
       Program(id, expression)
   }
@@ -13,11 +13,11 @@ object BvParser extends RegexParsers {
   def zero = "0" ^^^ Zero
   def one = "1" ^^^ One
   def id = "[a-z][a-z_0-9]*".r ^^ { Id(_) }
-  def iff = "(if0 " ~> exp ~ exp ~ exp <~ ")" ^^ {
+  def iff = "(" ~> "if0" ~> exp ~ exp ~ exp <~ ")" ^^ {
     case cond ~ tthen ~ eelse =>
       If(cond, tthen, eelse)
   }
-  def fold = "(fold " ~> exp ~ exp ~ ("(lambda(" ~> id) ~ (id <~ ")") ~ exp <~ "))" ^^ {
+  def fold = "(" ~> "fold" ~> exp ~ exp ~ ("(" ~> "lambda" ~> "(" ~> id) ~ (id <~ ")") ~ exp <~ ")" <~ ")" ^^ {
     case xs ~ z ~ acc ~ x ~ exp =>
       Fold(xs, z, acc, x, exp)
   }
