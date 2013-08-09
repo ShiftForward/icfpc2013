@@ -38,14 +38,10 @@ object Client {
           scheme = "http",
           host = hostname,
           path = "/" + endpoint,
-          query = Query("auth" -> (token + suffix)))))
+          query = Query("auth" -> (token + suffix))), body))
 
-    response.onComplete {
-      case Success(resp: Resp) =>
-      case Success(unexpected) =>
-        log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
-      case Failure(error) =>
-        log.error(error, "Something went wrong.")
+    response.onFailure {
+      case e: Exception => log.error(e, "Something went wrong.")
     }
     response
   }
