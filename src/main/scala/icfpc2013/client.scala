@@ -5,14 +5,15 @@ import akka.pattern.ask
 import akka.io.IO
 import akka.event.Logging
 import java.io.PrintStream
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 import spray.can.Http
 import spray.client.pipelining._
 import spray.http._
 import spray.http.Uri._
 import spray.httpx.SprayJsonSupport._
+import spray.httpx.marshalling.Marshaller
+import spray.httpx.unmarshalling.Unmarshaller
 
 object Client {
   import spray.util._
@@ -28,74 +29,38 @@ object Client {
 
   implicit val timeout = 10 seconds
 
-  def await[T](f: Future[T]) = Await.result(f, timeout)
-
-  def status: Future[Status] = {
-    val pipeline = sendReceive ~> unmarshal[Status]
+  def post[Req: Marshaller, Resp: Unmarshaller: Manifest](endpoint: String, body: Req): Future[Resp] = {
+    val pipeline = sendReceive ~> unmarshal[Resp]
     val response = pipeline(
       Post(
         Uri.from(
           scheme = "http",
           host = hostname,
-          path = "/status",
-          query = Query("auth" -> (token + suffix)))))
+          path = "/" + endpoint,
+          query = Query("auth" -> (token + suffix))), body))
 
-    response.onComplete {
-      case Success(status: Status) =>
-      case Success(unexpected) =>
-        log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
-      case Failure(error) =>
-        log.error(error, "Something went wrong.")
+    response.onFailure {
+      case e: Exception => log.error(e, "Something went wrong.")
     }
     response
   }
 
-  def problems: Future[List[Problem]] = {
-    val pipeline = sendReceive ~> unmarshal[List[Problem]]
-    val response = pipeline(
-      Post(
-        Uri.from(
-          scheme = "http",
-          host = hostname,
-          path = "/myproblems",
-          query = Query("auth" -> (token + suffix)))))
+  def status = post[String, Status]("status", "")
 
-    response.onComplete {
-      case Success(probs: List[Problem]) =>
-        val out = new PrintStream("problems.csv")
-        out.println("ID,Size,Operators")
-        probs.map { p =>
-          "%s,%s,\"%s\"".format(p.id, p.size, p.operators.mkString(", "))
-        }.foreach(out.println)
-        out.close()
-        log.info("Problems written to problems.csv")
-      case Success(unexpected) =>
-        log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
-      case Failure(error) =>
-        log.error(error, "Something went wrong.")
-    }
-    response
+  def problems = post[String, List[Problem]]("myproblems", "").map { probs =>
+    val out = new PrintStream("problems.csv")
+    out.println("ID,Size,Operators")
+    probs.map { p =>
+      "%s,%s,\"%s\"".format(p.id, p.size, p.operators.mkString(", "))
+    }.foreach(out.println)
+    out.close()
+    log.info("Problems written to problems.csv")
+    probs
   }
 
-  def train(tr: TrainRequest): Future[TrainingProblem] = {
-    val pipeline = sendReceive ~> unmarshal[TrainingProblem]
-    val response = pipeline(
-      Post(
-        Uri.from(
-          scheme = "http",
-          host = hostname,
-          path = "/train",
-          query = Query("auth" -> (token + suffix))), tr))
-
-    response.onComplete {
-      case Success(tp: TrainingProblem) =>
-      case Success(unexpected) =>
-        log.warning("The API call was successful but returned something unexpected: '{}'.", unexpected)
-      case Failure(error) =>
-        log.error(error, "Something went wrong.")
-    }
-    response
-  }
+  def train = post[TrainRequest, TrainingProblem]("train", _: TrainRequest)
+  def eval = post[EvalRequest, EvalResponse]("eval", _: EvalRequest)
+  def guess = post[Guess, GuessResponse]("guess", _: Guess)
 
   def shutdown(): Unit = {
     IO(Http).ask(Http.CloseAll)(1.second).await
