@@ -30,7 +30,7 @@ case class GuessResponse(
 
 case class TrainRequest(
   size: Option[Int],
-  operators: Option[String])
+  operators: Option[List[String]])
 
 case class TrainingProblem(
   challenge: String,
