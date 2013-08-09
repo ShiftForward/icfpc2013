@@ -15,9 +15,10 @@ scalacOptions := Seq("-deprecation", "-encoding", "utf8")
 resolvers += "spray repo" at "http://repo.spray.io"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor"   % "2.2.0-RC1",
-  "io.spray"           % "spray-client" % "1.2-M8",
-  "io.spray"          %% "spray-json"   % "1.2.5")
+  "com.typesafe.akka"   %% "akka-actor"    % "2.2.0-RC1",
+  "io.spray"             % "spray-client"  % "1.2-M8",
+  "org.apache.commons"   % "commons-math3" % "3.2",
+  "io.spray"            %% "spray-json"    % "1.2.5")
 
 initialCommands in console := """
       import icfpc2013.Client._;
