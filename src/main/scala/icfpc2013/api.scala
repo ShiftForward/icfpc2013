@@ -17,7 +17,7 @@ case class EvalRequest(
 case class EvalResponse(
   status: String,
   outputs: Option[List[String]],
-  message: String)
+  message: Option[String])
 
 case class Guess(
   id: String,
