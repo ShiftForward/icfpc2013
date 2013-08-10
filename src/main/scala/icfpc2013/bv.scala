@@ -40,28 +40,28 @@ case class If(cond: Expression, tthen: Expression, eelse: Expression) extends Ex
   override def toString = s"(if0 $cond $tthen $eelse)"
   def size = 1 + cond.size + tthen.size + eelse.size
   lazy val operators = Set[Operator](If0) union cond.operators union tthen.operators union eelse.operators
-  lazy val operatorIds = If0.id | cond.operatorIds | tthen.operatorIds | eelse.operatorIds
+  lazy val operatorIds = (1 << If0.id) | cond.operatorIds | tthen.operatorIds | eelse.operatorIds
 }
 
 case class Fold(xs: Expression, z: Expression, x: Id, acc: Id, exp: Expression) extends Expression {
   override def toString = s"(fold $xs $z (lambda ($x $acc) $exp))"
   def size = 2 + xs.size + z.size + exp.size
   lazy val operators = Set[Operator](Fold0) union xs.operators union z.operators union exp.operators
-  lazy val operatorIds = Fold0.id | xs.operatorIds | z.operatorIds | exp.operatorIds
+  lazy val operatorIds = (1 << Fold0.id) | xs.operatorIds | z.operatorIds | exp.operatorIds
 }
 
 case class Op1(op: Operator1, x: Expression) extends Expression {
   override def toString = s"($op $x)"
   def size = 1 + x.size
   lazy val operators = Set[Operator](op) union x.operators
-  lazy val operatorIds = op.id | x.operatorIds
+  lazy val operatorIds = (1 << op.id) | x.operatorIds
 }
 
 case class Op2(op: Operator2, x: Expression, y: Expression) extends Expression {
   override def toString = s"($op $x $y)"
   def size = 1 + x.size + y.size
   lazy val operators = Set[Operator](op) union x.operators union y.operators
-  lazy val operatorIds = op.id | x.operatorIds | y.operatorIds
+  lazy val operatorIds = (1 << op.id) | x.operatorIds | y.operatorIds
 }
 
 sealed trait Operator {
