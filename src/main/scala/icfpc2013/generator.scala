@@ -89,7 +89,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Set[Operator]): Stream[Expression] =
-    if (size <= 0)
+    if (size <= 0 || requiredOperators.map(_.staticSize).sum >= size)
       Stream.empty
     else if (size == 1)
       getOp0Expressions(size, operators, boundVariables, requiredOperators)
