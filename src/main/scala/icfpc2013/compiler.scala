@@ -50,8 +50,20 @@ object BvCompiler {
         case Xor =>
           ctx => apply(x)(ctx) ^ apply(y)(ctx)
         case Plus =>
-          ctx => (BigInt(HexString.fromLong(apply(x)(ctx)), 16) +
-            BigInt(HexString.fromLong(apply(y)(ctx)), 16)).longValue
+          ctx => add(apply(x)(ctx), apply(y)(ctx))
       }
+  }
+
+  @inline private[this] def add(a: Long, b: Long) = {
+    var carry = a & b
+    var result = a ^ b
+    var i = 0
+    while (i < 64) {
+      val shiftedcarry = carry << 1
+      carry = result & shiftedcarry
+      result ^= shiftedcarry
+      i += 1
+    }
+    result
   }
 }
