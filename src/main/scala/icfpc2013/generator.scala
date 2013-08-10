@@ -40,17 +40,17 @@ object ProgramGenerator {
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
       expression2 <- {
         def s = getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
-        if (operator != And || expression1 != Zero || s.isEmpty)
+        if (operator != And || expression1.staticValue != Some(0L) || s.isEmpty)
           s
         else
           Zero #:: Stream.empty // dummy stream
       }
     } yield {
-      if (operator == And && (expression1 == Zero || expression2 == Zero))
+      if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
         Zero
-      else if (operator == Or && expression1 == Zero)
+      else if (operator == Or && expression1.staticValue == Some(0L))
         expression2
-      else if (operator == Or && expression2 == Zero)
+      else if (operator == Or && expression2.staticValue == Some(0L))
         expression1
       else
         Op2(operator, expression1, expression2)
@@ -70,13 +70,13 @@ object ProgramGenerator {
       expression2 <- getExpressions(size2, operators, boundVariables, 0)
       expression3 <- {
         def s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
-        if (expression1 != Zero || s.isEmpty)
+        if (expression1.staticValue != Some(0L) || s.isEmpty)
           s
         else
           Zero #:: Stream.empty // dummy stream
       }
     } yield {
-      if (expression1 == Zero)
+      if (expression1.staticValue != Some(0L))
         expression2
       else
         If(expression1, expression2, expression3)
