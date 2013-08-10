@@ -107,7 +107,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     inputId: Id,
     useAllOperators: Boolean = false): Stream[Program] = {
-    val exprStream =
+    def exprStream =
       if (operators.contains(Tfold))
         getTFoldExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else Set())
       else getExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else Set())

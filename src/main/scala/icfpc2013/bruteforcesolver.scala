@@ -29,14 +29,14 @@ object BruteForceSolver extends Solver {
             knownInputs: Map[Long, Long] = Map(),
             state: State = initialState): (Map[Long, Long], State, Option[Expression]) = {
 
-    val possiblePrograms = state.getOrElse {
+    def possiblePrograms = state.getOrElse {
       ProgramGenerator.getPrograms(size, ops, inputId, true).map { p =>
         (p.e, BvCompiler(p))
       }
     }
 
     val inputsMap =
-      if(knownInputs.nonEmpty) knownInputs
+      if (knownInputs.nonEmpty) knownInputs
       else {
         val inputs = getInputs
         val response = Client.eval(EvalRequest(Some(problemId), None, inputs)).await
@@ -46,7 +46,7 @@ object BruteForceSolver extends Solver {
         inputsLong.zip(outputsLong).toMap
       }
 
-    val filteredStream = possiblePrograms.filter { program =>
+    def filteredStream = possiblePrograms.filter { program =>
       inputsMap.forall { case (in, out) => program._2(in) == out }
     }
 
