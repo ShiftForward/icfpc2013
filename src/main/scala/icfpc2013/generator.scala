@@ -65,12 +65,24 @@ object ProgramGenerator {
       size1 <- (1 to (size - 4)).toStream
       size2 <- 1 to (size - size1 - 3)
       size3 = size - size1 - size2 - 2
-      accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
       xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
+      accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
       expression1 <- getExpressions(size1, operators - Fold0, boundVariables, Set())
       expression2 <- getExpressions(size2, operators - Fold0, boundVariables, Set())
       expression3 <- getExpressions(size3, operators - Fold0, boundVariables + accId + xId, requiredOperators - Fold0 -- expression1.operators -- expression2.operators)
-    } yield Fold(expression1, expression2, accId, xId, expression3)
+    } yield Fold(expression1, expression2, xId, accId, expression3)
+
+  private[this] def getTFoldExpressions(
+    size: Int,
+    operators: Set[Operator],
+    boundVariables: Set[Id],
+    requiredOperators: Set[Operator]): Stream[Expression] =
+    if (!operators.contains(Fold0)) Stream.empty
+    else for {
+      expression <- getExpressions(size - 4, operators - Fold0, boundVariables, requiredOperators - Fold0)
+      xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
+      accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
+    } yield Fold(Id("x"), Zero, xId, accId, expression)
 
   private[this] def getExpressions(
     size: Int,
@@ -95,7 +107,7 @@ object ProgramGenerator {
     useAllOperators: Boolean = false): Stream[Program] = {
     val exprStream =
       if (operators.contains(Tfold))
-        getFoldExpressions(size - 1, operators + Fold0, Set(inputId), if (useAllOperators) operators else Set())
+        getTFoldExpressions(size - 1, operators + Fold0, Set(inputId), if (useAllOperators) operators else Set())
       else getExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else Set())
 
     exprStream.map(Program(inputId, _))
