@@ -2,6 +2,7 @@ package icfpc2013
 
 import scala.util.Random
 import scala.collection.mutable.ListBuffer
+import scala.math._
 
 object ProgramGenerator {
   private[this] val randIds: ListBuffer[Int] = Random.shuffle(1 to 100000).to[ListBuffer]
@@ -33,7 +34,7 @@ object ProgramGenerator {
     requiredOperators: Set[Operator]): Stream[Expression] =
     for {
       operator <- operators.collect({ case x: Operator2 => x }).toStream
-      size1 <- 1 to (size - 2)
+      size1 <- ceil((size - 1) / 2.0).toInt to (size - 2)
       size2 = size - size1 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, Set())
       expression2 <- getExpressions(size2, operators, boundVariables, requiredOperators - operator -- expression1.operators)
