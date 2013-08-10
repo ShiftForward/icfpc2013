@@ -7,36 +7,49 @@ import spray.util._
 
 object PlotSolver extends Solver {
 
+  type State = Unit
+  val initialState = ()
+
   val step = 1L << 32
   val inputs = (1 until 256).scanLeft(0L) { (acc, _) => acc + step }
   val hexInputs = inputs.map { n => "0x" + "%1$16s".format(n.toHexString).replace(' ', '0') }
   val csvScale = 0x100000L
 
-  def solve(problemId: String, size: Int, ops: Set[Operator], inputId: Id) = {
-    implicit val timeout = 10 seconds
-    val response = Client.eval(EvalRequest(Some(problemId), None, hexInputs.toList)).await
+  def solve(problemId: String,
+            size: Int,
+            ops: Set[Operator],
+            inputId: Id = Id("x"),
+            knownInputs: Map[Long, Long] = Map(),
+            state: State = initialState): (Map[Long, Long], State, Option[Expression]) = {
 
-    val hexOutputs = response.outputs.get
-    val outputs = hexOutputs.map(longHexToDouble)
+    val inputsMap =
+      if(knownInputs.nonEmpty) knownInputs
+      else {
+        val response = Client.eval(EvalRequest(Some(problemId), None, hexInputs.toList)).await
+        val inputsLong = hexInputs.map(h => HexString.toLong(h.drop(2)))
+        val outputsLong = response.outputs.get.map(h => HexString.toLong(h.drop(2)))
 
-    val pairs = inputs.zip(outputs)
+        inputsLong.zip(outputsLong).toMap
+      }
 
     val out = new PrintStream("func_chart.csv")
-    out.println(pairs.map { case (i, o) => i / csvScale + "," + o / csvScale }.mkString("\n"))
+    out.println(inputsMap.map { case (i, o) => i / csvScale + "," + o / csvScale }.mkString("\n"))
     out.close()
 
-    val params = LinearRegression(inputs, outputs).calc
+    val params = LinearRegression(inputs, inputs.map(inputsMap.apply(_).toDouble)).calc
     println("y = %f + %fx".format(params(0), params(1)))
 
     val factor = (Math.log(params(1)) / Math.log(2)).toInt
 
-    if(closeTo(factor, factor.toInt)) {
+    val expr = if(closeTo(factor, factor.toInt)) {
       if(factor > 0 && closeTo(params(0), 0)) Some(shl(inputId, factor))
       else if(factor < 0 && closeTo(params(0), 0)) Some(shr(inputId, -factor))
       else if(params(1) == 1 && closeTo(params(0), 0)) Some(inputId)
       else if(params(1) == -1 && closeTo(params(0), longHexToDouble("0xFFFFFFFFFFFFFFFF"))) Some(Op1(Not, inputId))
       else None
     } else None
+
+    (knownInputs, (), expr)
   }
 
   private[this] def closeTo(n1: Double, n2: Double, prec: Double = 0.0001) = Math.abs(n1 - n2) < prec
