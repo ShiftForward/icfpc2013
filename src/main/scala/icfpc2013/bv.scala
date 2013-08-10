@@ -88,7 +88,7 @@ object Fold0 extends Operator {
 }
 
 sealed trait Operator1 extends Operator {
-  val staticSize = 2
+  val staticSize = 1
 }
 
 object Not extends Operator1 {
@@ -181,6 +181,9 @@ object Operator {
         set
     }
   }
+
+  implicit def setToIds(ops: Set[Operator]): Int =
+    ops.foldLeft(0) { (mask, op) => mask | (1 << op.id) }
 }
 
 object Bv extends App {
