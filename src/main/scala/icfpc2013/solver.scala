@@ -7,7 +7,7 @@ trait Solver {
   type State
   val initialState: State
 
-  def batchSolve(probs: List[Problem], remTime: Int = 2): Boolean = probs match {
+  def batchSolve(probs: List[Problem]): Boolean = probs match {
     case Nil => println("All problems solved successfully!"); true
     case p :: ps =>
       solveAndGuess(p.id, p.size, p.operators.map(Operator(_)).toSet) match {
@@ -15,12 +15,7 @@ trait Solver {
         case Some(guess) =>
           if(guess.status == "win") {
             println("Solved problem " + p.id)
-            if(remTime == 1) {
-              Thread.sleep(20000)
-              batchSolve(ps, 2)
-            } else {
-              batchSolve(ps, remTime - 1)
-            }
+            batchSolve(ps)
           }
           else {
             println("A problem occurred solving problem " + p.id)
@@ -41,6 +36,8 @@ trait Solver {
 
     def solveWithInputs(knownInputs: Map[Long, Long] = Map(),
                         state: State = initialState): Option[GuessResponse] = {
+
+      Client.clearWindowFor(2) // at least for the eval and the guess requests
 
       solve(problemId, size, ops, inputId, knownInputs, state) match {
         case (_, _, None) =>
