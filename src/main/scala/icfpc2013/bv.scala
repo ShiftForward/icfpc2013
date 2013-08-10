@@ -90,6 +90,23 @@ object Plus extends Operator2 {
   override def toString = "plus"
 }
 
+object Operator {
+  def apply(str: String): Operator = str match {
+    case "if0" => If0
+    case "fold" => Fold0
+    case "not" => Not
+    case "shl1" => Shl1
+    case "shr1" => Shr1
+    case "shr4" => Shr4
+    case "shr16" => Shr16
+    case "and" => And
+    case "or" => Or
+    case "xor" => Xor
+    case "plus" => Plus
+    case "tfold" => Tfold
+  }
+}
+
 object Bv extends App {
   val program =
     Program(Id("x"), Fold(Id("x"), Zero, Id("y"), Id("z"), Op2(Or, Id("y"), Id("z"))))
