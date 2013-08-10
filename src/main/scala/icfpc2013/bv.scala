@@ -117,7 +117,7 @@ object Shr16 extends Operator1 {
 }
 
 sealed trait Operator2 extends Operator {
-  val staticSize = 2
+  val staticSize = 1
 }
 
 object And extends Operator2 {
