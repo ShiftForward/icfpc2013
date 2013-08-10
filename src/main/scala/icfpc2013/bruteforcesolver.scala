@@ -20,19 +20,17 @@ object BruteForceSolver extends Solver {
   }
 
   def solve(problemId: String, size: Int, ops: Set[Operator], inputId: Id) = {
-    val possiblePrograms = ProgramGenerator.getPrograms(size, ops, inputId, true)
+    def possiblePrograms = ProgramGenerator.getPrograms(size, ops, inputId, true)
     val inputs = getInputs
     val response = Client.eval(EvalRequest(Some(problemId), None, inputs)).await
     val inputsLong = inputs.map(h => HexString.toLong(h.drop(2)))
     val outputs = response.outputs.get
     val outputsLong = outputs.map(h => HexString.toLong(h.drop(2)))
 
-    val res = possiblePrograms.dropWhile { program =>
+    possiblePrograms.filter { program =>
       val f = BvCompiler(program)
       val results = inputsLong.map(f(_))
-      results != outputsLong
-    }
-
-    res.headOption.map(_.e)
+      results == outputsLong
+    }.headOption.map(_.e)
   }
 }
