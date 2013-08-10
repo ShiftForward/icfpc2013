@@ -58,9 +58,9 @@ object ProgramGenerator {
       size3 = size - size1 - size2 - 2
       accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
       xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
-      expression1 <- getExpressions(size1, operators, boundVariables)
-      expression2 <- getExpressions(size2, operators, boundVariables)
-      expression3 <- getExpressions(size3, operators, boundVariables + accId + xId)
+      expression1 <- getExpressions(size1, operators - Fold0, boundVariables)
+      expression2 <- getExpressions(size2, operators - Fold0, boundVariables)
+      expression3 <- getExpressions(size3, operators - Fold0, boundVariables + accId + xId)
     } yield Fold(expression1, expression2, accId, xId, expression3)
 
   def getExpressions(
@@ -77,4 +77,15 @@ object ProgramGenerator {
       getIfExpressions(size, operators, boundVariables) #:::
       getFoldExpressions(size, operators, boundVariables)
     }
+
+  def getPrograms(size: Int,
+                  operators: Set[Operator],
+                  inputId: Id): Stream[Program] = {
+    val exprStream =
+      if (operators.contains(Tfold))
+        getFoldExpressions(size - 1, operators + Fold0, Set(inputId))
+      else getExpressions(size - 1, operators, Set(inputId))
+
+    exprStream.map(Program(inputId, _))
+  }
 }

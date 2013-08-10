@@ -62,6 +62,6 @@ trait Solver {
     case "or" => Or
     case "xor" => Xor
     case "plus" => Plus
-    case "tfold" => Fold0 // TODO add this to the BV entities
+    case "tfold" => Tfold
   }
 }
