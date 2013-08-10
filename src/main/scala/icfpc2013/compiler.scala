@@ -13,7 +13,7 @@ object BvCompiler {
     case One => _ => 1
     case id: Id => ctx => ctx(id)
     case If(cond, tthen, eelse) =>
-      ctx => if (apply(cond)(ctx) != 0L) apply(tthen)(ctx) else apply(eelse)(ctx)
+      ctx => if (apply(cond)(ctx) == 0L) apply(tthen)(ctx) else apply(eelse)(ctx)
     case Fold(xs, z, x, acc, exp) =>
       ctx =>
         val base = apply(xs)(ctx)

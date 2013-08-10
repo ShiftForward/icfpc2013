@@ -46,8 +46,6 @@ object BruteForceSolver extends Solver {
         inputsLong.zip(outputsLong).toMap
       }
 
-    println("Inputs size is " + inputsMap.size)
-
     val filteredStream = possiblePrograms.filter { program =>
       inputsMap.forall { case (in, out) => program._2(in) == out }
     }
