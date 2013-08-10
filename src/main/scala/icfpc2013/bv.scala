@@ -17,43 +17,43 @@ sealed trait Expression extends Any {
 object Zero extends Expression {
   override def toString = "0"
   def size = 1
-  def operators = Set()
+  lazy val operators = Set[Operator]()
 }
 
 object One extends Expression {
   override def toString = "1"
   def size = 1
-  def operators = Set()
+  lazy val operators = Set[Operator]()
 }
 
-case class Id(s: String) extends AnyVal with Expression {
+case class Id(s: String) extends Expression {
   override def toString = s
   def size = 1
-  def operators = Set()
+  lazy val operators = Set[Operator]()
 }
 
 case class If(cond: Expression, tthen: Expression, eelse: Expression) extends Expression {
   override def toString = s"(if0 $cond $tthen $eelse)"
   def size = 1 + cond.size + tthen.size + eelse.size
-  def operators = Set[Operator](If0) union cond.operators union tthen.operators union eelse.operators
+  lazy val operators = Set[Operator](If0) union cond.operators union tthen.operators union eelse.operators
 }
 
 case class Fold(xs: Expression, z: Expression, x: Id, acc: Id, exp: Expression) extends Expression {
   override def toString = s"(fold $xs $z (lambda ($x $acc) $exp))"
   def size = 2 + xs.size + z.size + exp.size
-  def operators = Set[Operator](Fold0) union xs.operators union z.operators union exp.operators
+  lazy val operators = Set[Operator](Fold0) union xs.operators union z.operators union exp.operators
 }
 
 case class Op1(op: Operator1, x: Expression) extends Expression {
   override def toString = s"($op $x)"
   def size = 1 + x.size
-  def operators = Set[Operator](op) union x.operators
+  lazy val operators = Set[Operator](op) union x.operators
 }
 
 case class Op2(op: Operator2, x: Expression, y: Expression) extends Expression {
   override def toString = s"($op $x $y)"
   def size = 1 + x.size + y.size
-  def operators = Set[Operator](op) union x.operators union y.operators
+  lazy val operators = Set[Operator](op) union x.operators union y.operators
 }
 
 sealed trait Operator {
