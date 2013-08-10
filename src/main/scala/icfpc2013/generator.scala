@@ -47,6 +47,10 @@ object ProgramGenerator {
     } yield {
       if (operator == And && (expression1 == Zero || expression2 == Zero))
         Zero
+      else if (operator == Or && expression1 == Zero)
+        expression2
+      else if (operator == Or && expression2 == Zero)
+        expression1
       else
         Op2(operator, expression1, expression2)
     }
