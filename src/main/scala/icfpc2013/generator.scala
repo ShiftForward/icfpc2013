@@ -77,12 +77,14 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Set[Operator]): Stream[Expression] =
-    if (!operators.contains(Fold0)) Stream.empty
-    else for {
-      expression <- getExpressions(size - 4, operators - Fold0, boundVariables, requiredOperators - Fold0)
-      xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
-      accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
-    } yield Fold(Id("x"), Zero, xId, accId, expression)
+    if (!operators.contains(Tfold)) Stream.empty
+    else {
+      val xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
+      val accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
+      for {
+        expression <- getExpressions(size - 4, operators - Tfold, boundVariables + xId + accId, requiredOperators - Tfold)
+      } yield Fold(Id("x"), Zero, xId, accId, expression)
+    }
 
   private[this] def getExpressions(
     size: Int,
@@ -107,7 +109,7 @@ object ProgramGenerator {
     useAllOperators: Boolean = false): Stream[Program] = {
     val exprStream =
       if (operators.contains(Tfold))
-        getTFoldExpressions(size - 1, operators + Fold0, Set(inputId), if (useAllOperators) operators else Set())
+        getTFoldExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else Set())
       else getExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else Set())
 
     exprStream.map(Program(inputId, _))
