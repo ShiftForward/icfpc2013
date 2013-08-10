@@ -141,6 +141,8 @@ object Plus extends Operator2 {
 }
 
 object Operator {
+  val N_OPERATORS = 12
+
   def apply(str: String): Operator = str match {
     case "if0" => If0
     case "fold" => Fold0
@@ -154,6 +156,30 @@ object Operator {
     case "xor" => Xor
     case "plus" => Plus
     case "tfold" => Tfold
+  }
+
+  def apply(id: Int): Operator = id match {
+    case If0.id => If0
+    case Fold0.id => Fold0
+    case Not.id => Not
+    case Shl1.id => Shl1
+    case Shr1.id => Shr1
+    case Shr4.id => Shr4
+    case Shr16.id => Shr16
+    case And.id => And
+    case Or.id => Or
+    case Xor.id => Xor
+    case Plus.id => Plus
+    case Tfold.id => Tfold
+  }
+
+  implicit def idsToSet(ids: Int): Set[Operator] = {
+    (0 until N_OPERATORS).foldLeft(Set[Operator]()) { (set, i) =>
+      if ((ids & (1 << i)) > 0)
+        set + Operator(i)
+      else
+        set
+    }
   }
 }
 
