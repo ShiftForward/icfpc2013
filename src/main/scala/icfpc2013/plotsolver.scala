@@ -5,57 +5,14 @@ import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression
 import scala.concurrent.duration._
 import spray.util._
 
-object PlotSolver {
+object PlotSolver extends Solver {
 
   val step = 1L << 32
   val inputs = (1 until 256).scanLeft(0L) { (acc, _) => acc + step }
   val hexInputs = inputs.map { n => "0x" + "%1$16s".format(n.toHexString).replace(' ', '0') }
   val csvScale = 0x100000L
 
-  def batchSolve(probs: List[Problem], remTime: Int = 2): Boolean = probs match {
-    case Nil => println("All problems solved successfully!"); true
-    case p :: ps =>
-      solveAndGuess(p.id) match {
-        case None => println("A problem occurred solving problem " + p.id); false
-        case Some(guess) =>
-           if(guess.status == "win") {
-             println("Solved problem " + p.id)
-             if(remTime == 1) {
-               Thread.sleep(20000)
-               batchSolve(ps, 2)
-             } else {
-               batchSolve(ps, remTime - 1)
-             }
-           }
-           else {
-             println("A problem occurred solving problem " + p.id)
-             println("Guess response: " + guess)
-             false
-           }
-      }
-  }
-
-  def genSolveAndGuess(trainReq: TrainRequest = TrainRequest(Some(3), None)): Option[GuessResponse] = {
-    val train = Client.train(trainReq).await
-    println("Problem ID is " + train.id + " - " + train.challenge)
-    solveAndGuess(train.id)
-  }
-
-  def solveAndGuess(problemId: String): Option[GuessResponse] = {
-    val inputId = Id("in")
-
-    solve(problemId, inputId) match {
-      case None =>
-        println("Unknown function!")
-        None
-
-      case Some(expr) =>
-        val prog = Program(inputId, expr)
-        Some(Client.guess(Guess(problemId, prog.toString)).await)
-    }
-  }
-
-  def solve(problemId: String, inputId: Id = Id("in")): Option[Expression] = {
+  def solve(problemId: String, size: Int, ops: Set[Operator], inputId: Id) = {
     implicit val timeout = 10 seconds
     val response = Client.eval(EvalRequest(Some(problemId), None, hexInputs.toList)).await
 

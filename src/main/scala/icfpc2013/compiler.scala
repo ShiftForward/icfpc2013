@@ -1,6 +1,6 @@
 package icfpc2013
 
-import java.lang.{Long => JLong}
+import java.math.BigInteger
 
 object BvCompiler {
   type Context = Map[Id, Long]
@@ -50,11 +50,8 @@ object BvCompiler {
         case Xor =>
           ctx => apply(x)(ctx) ^ apply(y)(ctx)
         case Plus =>
-          ctx => (BigInt(apply(x)(ctx).toHexString, 16) +
-            BigInt(apply(y)(ctx).toHexString, 16)).longValue()
+          ctx => (BigInt(HexString.fromLong(apply(x)(ctx)), 16) +
+            BigInt(HexString.fromLong(apply(y)(ctx)), 16)).longValue
       }
   }
-
-  def hexToLong(hex: String): Long = JLong.decode(hex)
-  def longToHex(l: Long): String = "0x" + "%1$16s".format(l.toHexString).replace(' ', '0')
 }
