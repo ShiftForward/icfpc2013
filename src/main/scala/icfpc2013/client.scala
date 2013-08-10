@@ -25,7 +25,7 @@ object Client {
   val hostname = "icfpc2013.cloudapp.net"
 
   val windowWidth = 21000 // 1 second tolerance
-  val windowAllowance = 5
+  val windowAllowance = 4
   val windowQueue = mutable.Queue[Long]()
 
   def currTime = System.currentTimeMillis()
