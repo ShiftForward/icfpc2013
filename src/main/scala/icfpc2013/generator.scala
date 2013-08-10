@@ -39,10 +39,11 @@ object ProgramGenerator {
       size2 = size - size1 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
       expression2 <- {
-        if (operator != And || expression1 != Zero)
-          getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
+        def s = getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
+        if (operator != And || expression1 != Zero || s.isEmpty)
+          s
         else
-          Zero #:: Stream.empty
+          Zero #:: Stream.empty // dummy stream
       }
     } yield {
       if (operator == And && (expression1 == Zero || expression2 == Zero))
@@ -67,8 +68,19 @@ object ProgramGenerator {
       size3 = size - size1 - size2 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
       expression2 <- getExpressions(size2, operators, boundVariables, 0)
-      expression3 <- getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
-    } yield If(expression1, expression2, expression3)
+      expression3 <- {
+        def s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
+        if (expression1 != Zero || s.isEmpty)
+          s
+        else
+          Zero #:: Stream.empty // dummy stream
+      }
+    } yield {
+      if (expression1 == Zero)
+        expression2
+      else
+        If(expression1, expression2, expression3)
+    }
 
   private[this] def getFoldExpressions(
     size: Int,
