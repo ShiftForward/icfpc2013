@@ -12,67 +12,79 @@ case class Program(id: Id, e: Expression) {
 sealed trait Expression extends Any {
   def size: Int
   def operators: Set[Operator]
+  def operatorIds: Int
 }
 
 object Zero extends Expression {
   override def toString = "0"
   def size = 1
   lazy val operators = Set[Operator]()
+  lazy val operatorIds = 0
 }
 
 object One extends Expression {
   override def toString = "1"
   def size = 1
   lazy val operators = Set[Operator]()
+  lazy val operatorIds = 0
 }
 
 case class Id(s: String) extends Expression {
   override def toString = s
   def size = 1
   lazy val operators = Set[Operator]()
+  lazy val operatorIds = 0
 }
 
 case class If(cond: Expression, tthen: Expression, eelse: Expression) extends Expression {
   override def toString = s"(if0 $cond $tthen $eelse)"
   def size = 1 + cond.size + tthen.size + eelse.size
   lazy val operators = Set[Operator](If0) union cond.operators union tthen.operators union eelse.operators
+  lazy val operatorIds = If0.id | cond.operatorIds | tthen.operatorIds | eelse.operatorIds
 }
 
 case class Fold(xs: Expression, z: Expression, x: Id, acc: Id, exp: Expression) extends Expression {
   override def toString = s"(fold $xs $z (lambda ($x $acc) $exp))"
   def size = 2 + xs.size + z.size + exp.size
   lazy val operators = Set[Operator](Fold0) union xs.operators union z.operators union exp.operators
+  lazy val operatorIds = Fold0.id | xs.operatorIds | z.operatorIds | exp.operatorIds
 }
 
 case class Op1(op: Operator1, x: Expression) extends Expression {
   override def toString = s"($op $x)"
   def size = 1 + x.size
   lazy val operators = Set[Operator](op) union x.operators
+  lazy val operatorIds = op.id | x.operatorIds
 }
 
 case class Op2(op: Operator2, x: Expression, y: Expression) extends Expression {
   override def toString = s"($op $x $y)"
   def size = 1 + x.size + y.size
   lazy val operators = Set[Operator](op) union x.operators union y.operators
+  lazy val operatorIds = op.id | x.operatorIds | y.operatorIds
 }
 
 sealed trait Operator {
   def staticSize: Int
+  def id: Int
 }
 
 object If0 extends Operator {
   override def toString = "if0"
   val staticSize = 1
+  val id = 0
 }
 
 object Tfold extends Operator {
   override def toString = "tfold"
   val staticSize = 2
+  val id = 1
 }
 
 object Fold0 extends Operator {
   override def toString = "fold"
   val staticSize = 2
+  val id = 2
 }
 
 sealed trait Operator1 extends Operator {
@@ -81,22 +93,27 @@ sealed trait Operator1 extends Operator {
 
 object Not extends Operator1 {
   override def toString = "not"
+  val id = 3
 }
 
 object Shl1 extends Operator1 {
   override def toString = "shl1"
+  val id = 4
 }
 
 object Shr1 extends Operator1 {
   override def toString = "shr1"
+  val id = 5
 }
 
 object Shr4 extends Operator1 {
   override def toString = "shr4"
+  val id = 6
 }
 
 object Shr16 extends Operator1 {
   override def toString = "shr16"
+  val id = 7
 }
 
 sealed trait Operator2 extends Operator {
@@ -105,18 +122,22 @@ sealed trait Operator2 extends Operator {
 
 object And extends Operator2 {
   override def toString = "and"
+  val id = 8
 }
 
 object Or extends Operator2 {
   override def toString = "or"
+  val id = 9
 }
 
 object Xor extends Operator2 {
   override def toString = "xor"
+  val id = 10
 }
 
 object Plus extends Operator2 {
   override def toString = "plus"
+  val id = 11
 }
 
 object Operator {
