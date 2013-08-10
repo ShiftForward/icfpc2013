@@ -26,7 +26,7 @@ object Client {
 
   val windowWidth = 21000 // 1 second tolerance
   val windowAllowance = 5
-  var windowQueue = mutable.Queue[Long]()
+  val windowQueue = mutable.Queue[Long]()
 
   def currTime = System.currentTimeMillis()
 
