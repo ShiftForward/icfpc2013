@@ -4,15 +4,17 @@ case class Program(id: Id, e: Expression) {
   override def toString = s"(lambda ($id) $e)"
   def size = 1 + e.size
   def operators = e match {
-    case Fold(id, Zero, _, _, e) => Set[Operator](Tfold) union e.operators
+    case Fold(`id`, Zero, _, _, e2) => Set[Operator](Tfold) union e2.operators
     case _ => e.operators
   }
+  def staticValue = e.staticValue
 }
 
 sealed trait Expression extends Any {
   def size: Int
   def operators: Set[Operator]
   def operatorIds: Int
+  def staticValue: Option[Long]
 }
 
 object Zero extends Expression {
@@ -20,6 +22,7 @@ object Zero extends Expression {
   def size = 1
   lazy val operators = Set[Operator]()
   lazy val operatorIds = 0
+  lazy val staticValue = Some(0L)
 }
 
 object One extends Expression {
@@ -27,6 +30,7 @@ object One extends Expression {
   def size = 1
   lazy val operators = Set[Operator]()
   lazy val operatorIds = 0
+  lazy val staticValue = Some(1L)
 }
 
 case class Id(s: String) extends Expression {
@@ -34,6 +38,7 @@ case class Id(s: String) extends Expression {
   def size = 1
   lazy val operators = Set[Operator]()
   lazy val operatorIds = 0
+  lazy val staticValue = None
 }
 
 case class If(cond: Expression, tthen: Expression, eelse: Expression) extends Expression {
@@ -41,6 +46,9 @@ case class If(cond: Expression, tthen: Expression, eelse: Expression) extends Ex
   def size = 1 + cond.size + tthen.size + eelse.size
   lazy val operators = Set[Operator](If0) union cond.operators union tthen.operators union eelse.operators
   lazy val operatorIds = (1 << If0.id) | cond.operatorIds | tthen.operatorIds | eelse.operatorIds
+  lazy val staticValue = cond.staticValue.flatMap { cv =>
+    if(cv == 0L) tthen.staticValue else eelse.staticValue
+  }
 }
 
 case class Fold(xs: Expression, z: Expression, x: Id, acc: Id, exp: Expression) extends Expression {
@@ -48,6 +56,10 @@ case class Fold(xs: Expression, z: Expression, x: Id, acc: Id, exp: Expression) 
   def size = 2 + xs.size + z.size + exp.size
   lazy val operators = Set[Operator](Fold0) union xs.operators union z.operators union exp.operators
   lazy val operatorIds = (1 << Fold0.id) | xs.operatorIds | z.operatorIds | exp.operatorIds
+
+  // this yields false None's; but in order to yield a static value, not only must xs and z be static,
+  // but exp must only use x and acc variables - something not easily testable from here
+  lazy val staticValue = exp.staticValue
 }
 
 case class Op1(op: Operator1, x: Expression) extends Expression {
@@ -55,6 +67,8 @@ case class Op1(op: Operator1, x: Expression) extends Expression {
   def size = 1 + x.size
   lazy val operators = Set[Operator](op) union x.operators
   lazy val operatorIds = (1 << op.id) | x.operatorIds
+
+  lazy val staticValue = x.staticValue.map { _ => BvCompiler(this)(Map()) }
 }
 
 case class Op2(op: Operator2, x: Expression, y: Expression) extends Expression {
@@ -62,6 +76,11 @@ case class Op2(op: Operator2, x: Expression, y: Expression) extends Expression {
   def size = 1 + x.size + y.size
   lazy val operators = Set[Operator](op) union x.operators union y.operators
   lazy val operatorIds = (1 << op.id) | x.operatorIds | y.operatorIds
+
+  lazy val staticValue = for {
+    _ <- x.staticValue
+    _ <- y.staticValue
+  } yield BvCompiler(this)(Map())
 }
 
 sealed trait Operator {
