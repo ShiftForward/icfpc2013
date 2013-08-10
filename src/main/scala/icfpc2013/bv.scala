@@ -56,21 +56,28 @@ case class Op2(op: Operator2, x: Expression, y: Expression) extends Expression {
   def operators = Set[Operator](op) union x.operators union y.operators
 }
 
-sealed trait Operator
+sealed trait Operator {
+  def staticSize: Int
+}
 
 object If0 extends Operator {
   override def toString = "if0"
+  val staticSize = 1
 }
 
 object Tfold extends Operator {
   override def toString = "tfold"
+  val staticSize = 2
 }
 
 object Fold0 extends Operator {
   override def toString = "fold"
+  val staticSize = 2
 }
 
-sealed trait Operator1 extends Operator
+sealed trait Operator1 extends Operator {
+  val staticSize = 2
+}
 
 object Not extends Operator1 {
   override def toString = "not"
@@ -92,7 +99,9 @@ object Shr16 extends Operator1 {
   override def toString = "shr16"
 }
 
-sealed trait Operator2 extends Operator
+sealed trait Operator2 extends Operator {
+  val staticSize = 2
+}
 
 object And extends Operator2 {
   override def toString = "and"
