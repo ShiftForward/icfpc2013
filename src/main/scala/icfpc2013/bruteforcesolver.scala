@@ -1,11 +1,14 @@
 package icfpc2013
 
-import icfpc2013.BvCompiler._
 import scala.util.Random
 import scala.collection.mutable.ListBuffer
 import spray.util._
 
 object BruteForceSolver extends Solver {
+
+  type State = Option[Stream[(Expression, Long => Long)]]
+  val initialState = None
+
   def getInputs: List[String] = {
     val inputs = ListBuffer[String]()
 
@@ -19,20 +22,34 @@ object BruteForceSolver extends Solver {
     inputs.toList
   }
 
-  def solve(problemId: String, size: Int, ops: Set[Operator], inputId: Id) = {
-    val possiblePrograms = ProgramGenerator.getPrograms(size, ops, inputId, true)
-    val inputs = getInputs
-    val response = Client.eval(EvalRequest(Some(problemId), None, inputs)).await
-    val inputsLong = inputs.map(h => HexString.toLong(h.drop(2)))
-    val outputs = response.outputs.get
-    val outputsLong = outputs.map(h => HexString.toLong(h.drop(2)))
+  def solve(problemId: String,
+            size: Int,
+            ops: Set[Operator],
+            inputId: Id = Id("x"),
+            knownInputs: Map[Long, Long] = Map(),
+            state: State = initialState): (Map[Long, Long], State, Option[Expression]) = {
 
-    val res = possiblePrograms.dropWhile { program =>
-      val f = BvCompiler(program)
-      val results = inputsLong.map(f(_))
-      results != outputsLong
+    val possiblePrograms = state.getOrElse {
+      ProgramGenerator.getPrograms(size, ops, inputId, true).map { p =>
+        (p.e, BvCompiler(p))
+      }
     }
 
-    res.headOption.map(_.e)
+    val inputsMap =
+      if(knownInputs.nonEmpty) knownInputs
+      else {
+        val inputs = getInputs
+        val response = Client.eval(EvalRequest(Some(problemId), None, inputs)).await
+        val inputsLong = inputs.map(h => HexString.toLong(h.drop(2)))
+        val outputsLong = response.outputs.get.map(h => HexString.toLong(h.drop(2)))
+
+        inputsLong.zip(outputsLong).toMap
+      }
+
+    val filteredStream = possiblePrograms.filter { program =>
+      inputsMap.forall { case (in, out) => program._2(in) == out }
+    }
+
+    (inputsMap, Some(filteredStream), filteredStream.headOption.map(_._1))
   }
 }

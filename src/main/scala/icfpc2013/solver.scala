@@ -4,7 +4,10 @@ import spray.util._
 
 trait Solver {
 
-  def batchSolve(probs: List[Problem], remTime: Int = 2): Boolean = probs match {
+  type State
+  val initialState: State
+
+  def batchSolve(probs: List[Problem]): Boolean = probs match {
     case Nil => println("All problems solved successfully!"); true
     case p :: ps =>
       solveAndGuess(p.id, p.size, p.operators.map(Operator(_)).toSet) match {
@@ -12,12 +15,7 @@ trait Solver {
         case Some(guess) =>
           if(guess.status == "win") {
             println("Solved problem " + p.id)
-            if(remTime == 1) {
-              Thread.sleep(20000)
-              batchSolve(ps, 2)
-            } else {
-              batchSolve(ps, remTime - 1)
-            }
+            batchSolve(ps)
           }
           else {
             println("A problem occurred solving problem " + p.id)
@@ -29,23 +27,48 @@ trait Solver {
 
   def genSolveAndGuess(trainReq: TrainRequest = TrainRequest(Some(3), None)): Option[GuessResponse] = {
     val train = Client.train(trainReq).await
-    println("Problem ID is " + train.id + " - " + train.challenge)
+    println("Problem is " + train)
     solveAndGuess(train.id, train.size, train.operators.map(Operator(_)).toSet)
   }
 
   def solveAndGuess(problemId: String, size: Int, ops: Set[Operator]): Option[GuessResponse] = {
     val inputId = Id("x")
 
-    solve(problemId, size, ops, inputId) match {
-      case None =>
-        println("Unknown function!")
-        None
+    def solveWithInputs(knownInputs: Map[Long, Long] = Map(),
+                        state: State = initialState): Option[GuessResponse] = {
 
-      case Some(expr) =>
-        val prog = Program(inputId, expr)
-        Some(Client.guess(Guess(problemId, prog.toString)).await)
+      Client.clearWindowFor(2) // at least for the eval and the guess requests
+
+      solve(problemId, size, ops, inputId, knownInputs, state) match {
+        case (_, _, None) =>
+          println("Unknown function!")
+          None
+
+        case (newKnownInputs, newState, Some(expr)) =>
+          val prog = Program(inputId, expr)
+
+          println("Trying program " + prog)
+
+          Client.guess(Guess(problemId, prog.toString)).await match {
+            case g @ GuessResponse("win", _, _) => Some(g)
+
+            case GuessResponse("mismatch", Some(in :: out :: wrongOut :: _), _) =>
+              println("Mismatch occurred on P(%s): expected %s, found %s. Retrying...".
+                format(in, out, wrongOut))
+
+              solveWithInputs(
+                Map(HexString.toLong(in.drop(2)) -> HexString.toLong(out.drop(2))),
+                newState)
+          }
+      }
     }
+    solveWithInputs()
   }
 
-  def solve(problemId: String, size: Int, ops: Set[Operator], inputId: Id = Id("x")): Option[Expression]
+  def solve(problemId: String,
+            size: Int,
+            ops: Set[Operator],
+            inputId: Id = Id("x"),
+            knownInputs: Map[Long, Long] = Map(),
+            state: State = initialState): (Map[Long, Long], State, Option[Expression])
 }

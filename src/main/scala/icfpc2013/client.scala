@@ -9,6 +9,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import spray.can.Http
 import spray.client.pipelining._
+import scala.collection.mutable
 import spray.http._
 import spray.http.Uri._
 import spray.httpx.SprayJsonSupport._
@@ -23,6 +24,24 @@ object Client {
   val suffix = "vpsH1H"
   val hostname = "icfpc2013.cloudapp.net"
 
+  val windowWidth = 21000 // 1 second tolerance
+  val windowAllowance = 5
+  val windowQueue = mutable.Queue[Long]()
+
+  def currTime = System.currentTimeMillis()
+
+  def clearWindowFor(n: Int) {
+    while(windowQueue.nonEmpty &&
+      windowQueue.head + windowWidth < currTime) windowQueue.dequeue()
+
+    if(windowAllowance < windowQueue.size + n) {
+      val toWait = windowQueue.head + windowWidth - currTime
+      println("Waiting %d seconds before making the next request...".format(toWait / 1000))
+      Thread.sleep(toWait)
+      clearWindowFor(n - 1)
+    }
+  }
+
   implicit lazy val system = ActorSystem()
   import system.dispatcher
   val log = Logging(system, getClass)
@@ -30,6 +49,8 @@ object Client {
   implicit val timeout = 10 seconds
 
   def post[Req: Marshaller, Resp: Unmarshaller: Manifest](endpoint: String, body: Req): Future[Resp] = {
+    clearWindowFor(1)
+
     val pipeline = sendReceive ~> unmarshal[Resp]
     val response = pipeline(
       Post(
@@ -38,6 +59,8 @@ object Client {
           host = hostname,
           path = "/" + endpoint,
           query = Query("auth" -> (token + suffix))), body))
+
+    windowQueue.enqueue(currTime)
 
     response.onFailure {
       case e: Exception => log.error(e, "Something went wrong.")
