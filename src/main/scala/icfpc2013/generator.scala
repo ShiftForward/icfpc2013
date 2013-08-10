@@ -27,7 +27,7 @@ object ProgramGenerator {
     boundVariables: Set[Id]): Stream[Expression] =
     for {
       operator <- operators.collect({ case x: Operator2 => x }).toStream
-      size1 <- (1 to (size - 2))
+      size1 <- 1 to (size - 2)
       size2 = size - size1 - 1
       expression1 <- getExpressions(size1, operators, boundVariables)
       expression2 <- getExpressions(size2, operators, boundVariables)
@@ -37,10 +37,10 @@ object ProgramGenerator {
     size: Int,
     operators: Set[Operator],
     boundVariables: Set[Id]): Stream[Expression] =
-    for {
-      operator <- operators.collect({ case If0 => If0 }).toStream
-      size1 <- (1 to (size - 3))
-      size2 <- (1 to (size - size1 - 2))
+    if(!operators.contains(If0)) Stream.empty
+    else for {
+      size1 <- (1 to (size - 3)).toStream
+      size2 <- 1 to (size - size1 - 2)
       size3 = size - size1 - size2 - 1
       expression1 <- getExpressions(size1, operators, boundVariables)
       expression2 <- getExpressions(size2, operators, boundVariables)
@@ -51,10 +51,10 @@ object ProgramGenerator {
     size: Int,
     operators: Set[Operator],
     boundVariables: Set[Id]): Stream[Expression] =
-    for {
-      operator <- operators.collect({ case Fold0 => Fold0 }).toStream
-      size1 <- (1 to (size - 4))
-      size2 <- (1 to (size - size1 - 3))
+    if(!operators.contains(Fold0)) Stream.empty
+    else for {
+      size1 <- (1 to (size - 4)).toStream
+      size2 <- 1 to (size - size1 - 3)
       size3 = size - size1 - size2 - 2
       accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
       xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
