@@ -38,8 +38,18 @@ object ProgramGenerator {
       size1 <- ceil((size - 1) / 2.0).toInt to (size - 2)
       size2 = size - size1 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
-      expression2 <- getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
-    } yield Op2(operator, expression1, expression2)
+      expression2 <- {
+        if (operator != And || expression1 != Zero)
+          getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
+        else
+          Zero #:: Stream.empty
+      }
+    } yield {
+      if (operator == And && (expression1 == Zero || expression2 == Zero))
+        Zero
+      else
+        Op2(operator, expression1, expression2)
+    }
 
   private[this] def getIfExpressions(
     size: Int,
