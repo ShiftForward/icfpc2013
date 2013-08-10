@@ -10,9 +10,10 @@ object BruteForceSolver extends Solver {
     val inputs = ListBuffer[String]()
 
     inputs += "0x0000000000000000"
-    inputs += "0xffffffffffffffff"
+    inputs += "0xFFFFFFFFFFFFFFFF"
+
     while (inputs.size < 256) {
-      inputs += longToHex(Random.nextLong())
+      inputs += ("0x" + HexString.fromLong(Random.nextLong()))
     }
 
     inputs.toList
@@ -22,12 +23,14 @@ object BruteForceSolver extends Solver {
     val possiblePrograms = ProgramGenerator.getPrograms(size, ops, inputId, true)
     val inputs = getInputs
     val response = Client.eval(EvalRequest(Some(problemId), None, inputs)).await
-    val outputs = response.outputs.get.map(_.toLowerCase)
+    val inputsLong = inputs.map(h => HexString.toLong(h.drop(2)))
+    val outputs = response.outputs.get
+    val outputsLong = outputs.map(h => HexString.toLong(h.drop(2)))
 
     val res = possiblePrograms.dropWhile { program =>
       val f = BvCompiler(program)
-      val results = inputs.map(input => f(BvCompiler.hexToLong(input))).map(BvCompiler.longToHex)
-      results != outputs
+      val results = inputsLong.map(f(_))
+      results != outputsLong
     }
 
     res.headOption.map(_.e)
