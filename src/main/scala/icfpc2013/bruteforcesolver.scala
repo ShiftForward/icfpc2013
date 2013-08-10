@@ -19,7 +19,7 @@ object BruteForceSolver extends Solver {
   }
 
   def solve(problemId: String, size: Int, ops: Set[Operator], inputId: Id) = {
-    val possiblePrograms = ProgramGenerator.getPrograms(size, ops, inputId)
+    val possiblePrograms = ProgramGenerator.getPrograms(size, ops, inputId, true)
     val inputs = getInputs
     val response = Client.eval(EvalRequest(Some(problemId), None, inputs)).await
     val outputs = response.outputs.get.map(_.toLowerCase)
