@@ -48,9 +48,9 @@ object ProgramGenerator {
     } yield {
       if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
         Zero
-      else if ((operator == Or || operator == Xor) && expression1.staticValue == Some(0L))
+      else if ((operator == Or || operator == Xor || operator == Plus) && expression1.staticValue == Some(0L))
         expression2
-      else if ((operator == Or || operator == Xor) && expression2.staticValue == Some(0L))
+      else if ((operator == Or || operator == Xor || operator == Plus) && expression2.staticValue == Some(0L))
         expression1
       else if ((operator == And || operator == Or) && (expression1 == expression2 || expression1.isStaticallyEqualTo(expression2) ))
         expression1
@@ -59,10 +59,6 @@ object ProgramGenerator {
       else if ((operator == Shl1 || operator == Shr4 || operator == Shr16) && expression1.staticValue == Some(0L))
         expression2
       else if ((operator == Shl1 || operator == Shr4 || operator == Shr16) && expression2.staticValue == Some(0L))
-        expression1
-      else if (operator == Plus && expression1.staticValue == Some(0L))
-        expression2
-      else if (operator == Plus && expression2.staticValue == Some(0L))
         expression1
       else
         Op2(operator, expression1, expression2)
