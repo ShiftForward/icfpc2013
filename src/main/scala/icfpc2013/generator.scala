@@ -26,7 +26,12 @@ object ProgramGenerator {
     for {
       operator <- operators.collect({ case x: Operator1 => x }).toStream
       expression <- getExpressions(size - 1, operators, boundVariables, requiredOperators & ~(1 << operator.id))
-    } yield Op1(operator, expression)
+    } yield {
+      if ((operator == Shl1 || operator == Shr1 || operator == Shr4 || operator == Shr16) && expression.staticValue == Some(0L))
+        expression
+      else
+        Op1(operator, expression)
+    }
 
   private[this] def getOp2Expressions(
     size: Int,
@@ -48,15 +53,13 @@ object ProgramGenerator {
     } yield {
       if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
         Zero
-      /* else if (operator == And && expression1.staticValue == Some(-1L))
+      else if (operator == And && expression1.staticValue == Some(-1L))
         expression2
       else if (operator == And && expression2.staticValue == Some(-1L))
         expression1
-      else if (operator == Or && (expression1.staticValue == Some(-1L) || expression2.staticValue == Some(-1L)))
-        Some(-1L) */
-      else if ((operator == Or || operator == Xor || operator == Plus || operator == Shl1 || operator == Shr1 || operator == Shr4 || operator == Shr16) && expression1.staticValue == Some(0L))
+      else if ((operator == Or || operator == Xor || operator == Plus) && expression1.staticValue == Some(0L))
         expression2
-      else if ((operator == Or || operator == Xor || operator == Plus || operator == Shl1 || operator == Shr1 || operator == Shr4 || operator == Shr16) && expression2.staticValue == Some(0L))
+      else if ((operator == Or || operator == Xor || operator == Plus) && expression2.staticValue == Some(0L))
         expression1
       else if ((operator == And || operator == Or) && (expression1 == expression2 || expression1.isStaticallyEqualTo(expression2) ))
         expression1
