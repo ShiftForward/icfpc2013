@@ -110,11 +110,11 @@ object ProgramGenerator {
       expressionToYield =
         if (expression1.staticValue == Some(0L))
           expression2
-        else if (expression2 == expression3 || expression2.staticValue == expression3.staticValue)
+        else if (expression2 == expression3 || expression2.isStaticallyEqualTo(expression3))
           expression2
         else
           If(expression1, expression2, expression3)
-      
+
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
       expressionToYield.staticValue.map(visited +=)
