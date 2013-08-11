@@ -3,6 +3,8 @@ package icfpc2013
 import java.io._
 import java.util.zip._
 import org.apache.commons.io.IOUtils
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.slick.driver.SQLiteDriver.simple._
 import Database.threadLocalSession
 import spray.util._
@@ -23,9 +25,7 @@ case class RainbowTableSolver(dbName: String = "rainbow") extends Solver {
     knownInputs: Map[Long, Long] = Map(),
     state: State = initialState): (Map[Long, Long], State, Option[Expression]) = rainbowTable.db withSession {
 
-    require(!(Query(RainbowTables).filter(_.problemId === problemId).list.isEmpty))
-
-    var outputHash = 0
+    var outputHash = knownInputs.values.##
 
     val inputsMap =
       if (knownInputs.nonEmpty) knownInputs
@@ -38,8 +38,8 @@ case class RainbowTableSolver(dbName: String = "rainbow") extends Solver {
       }
 
     val possiblePrograms = state.getOrElse {
-      (for {
-        r <- RainbowTables if r.problemId === problemId && r.outputHash === outputHash.toString
+      val rainbowPrograms = (for {
+        r <- RainbowTables if r.outputHash === outputHash.toString
       } yield (r.program)).list.map { bytes =>
 
         val out = new ByteArrayOutputStream()
@@ -54,6 +54,16 @@ case class RainbowTableSolver(dbName: String = "rainbow") extends Solver {
 
         (program.e, BvCompiler(program))
       }
+
+      if (rainbowPrograms.isEmpty)
+        ProgramGenerator.getPrograms(size, ops, inputId, true).map { p =>
+          Future {
+            RainbowTables.insert(
+              problemId, p, outputHash.toString)
+          }
+          (p.e, BvCompiler(p))
+        }
+      else rainbowPrograms
     }
 
     val filtered = possiblePrograms.filter { program =>
