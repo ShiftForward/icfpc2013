@@ -15,6 +15,10 @@ sealed trait Expression extends Any {
   def operators: Set[Operator]
   def operatorIds: Int
   def staticValue: Option[Long]
+  def isStaticallyEqualTo(e: Expression): Boolean = (for {
+    v1 <- staticValue
+    v2 <- e.staticValue
+  } yield v1 == v2).getOrElse(false)
 }
 
 object Zero extends Expression {
