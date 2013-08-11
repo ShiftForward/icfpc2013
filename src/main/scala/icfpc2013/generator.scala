@@ -52,7 +52,7 @@ object ProgramGenerator {
         expression2
       else if (operator == Or && expression2.staticValue == Some(0L))
         expression1
-      else if ((operator == And || operator == Or) && expression1 == expression2)
+      else if ((operator == And || operator == Or) && (expression1 == expression2 || expression1.isStaticallyEqualTo(expression2) ))
         expression1
       else
         Op2(operator, expression1, expression2)
