@@ -229,7 +229,7 @@ object ProgramGenerator {
                    getIfExpressions(size, operators, boundVariables, requiredOperators) ++
                    getFoldExpressions(size, operators, boundVariables, requiredOperators)
 
-        if (size < 11) {
+        if (size < 11 && !(operators.contains(Fold0))) {
           val result = exps.toSet
           cache += ((size, requiredOperators) -> result)
           result.toIterator
