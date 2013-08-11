@@ -54,6 +54,8 @@ object ProgramGenerator {
         expression1
       else if ((operator == And || operator == Or) && (expression1 == expression2 || expression1.isStaticallyEqualTo(expression2) ))
         expression1
+      else if ((operator == Xor) && (expression1 == expression2 || expression1.isStaticallyEqualTo(expression2) ))
+        Zero
       else
         Op2(operator, expression1, expression2)
     }
