@@ -48,6 +48,12 @@ object ProgramGenerator {
     } yield {
       if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
         Zero
+      /* else if (operator == And && expression1.staticValue == Some(-1L))
+        expression2
+      else if (operator == And && expression2.staticValue == Some(-1L))
+        expression1
+      else if (operator == Or && (expression1.staticValue == Some(-1L) || expression2.staticValue == Some(-1L)))
+        Some(-1L) */
       else if ((operator == Or || operator == Xor || operator == Plus || operator == Shl1 || operator == Shr1 || operator == Shr4 || operator == Shr16) && expression1.staticValue == Some(0L))
         expression2
       else if ((operator == Or || operator == Xor || operator == Plus || operator == Shl1 || operator == Shr1 || operator == Shr4 || operator == Shr16) && expression2.staticValue == Some(0L))

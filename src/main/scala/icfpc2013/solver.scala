@@ -3,7 +3,6 @@ package icfpc2013
 import spray.util._
 
 trait Solver {
-
   type State
   val initialState: State
 
