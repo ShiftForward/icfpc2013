@@ -181,10 +181,22 @@ object ProgramGenerator {
       size1 <- (4 to (size - 11)).toIterator // If, And, One, 4 for expression2 and 4 for expression3
       size2 <- 4 to (size - size1 - 7)
       size3 = size - size1 - size2 - 3
-      expression1 <- getExpressions(size1, operators, Set(inputId), 0)
-      expression2 <- getExpressions(size2, operators, Set(inputId), 0)
-      expression3 <- getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
-      expressionToYield = If(Op2(And, expression1, One), expression2, expression3)
+      expression1 <- getExpressions(size1, operators - If0, Set(inputId), 0)
+      expression2 <- {
+        def s = getExpressions(size2, operators - If0, Set(inputId), 0)
+        if (expression1.staticValue == Some(1L) || s.isEmpty) Iterator(Zero) ++ Iterator.empty // dummy stream
+        else s
+      }
+      expression3 <- {
+        def s = getExpressions(size3, operators - If0, Set(inputId), requiredOperators & ~(1 << Bonus.id | 1 << If0.id | expression1.operatorIds | expression2.operatorIds))
+        if (expression1.staticValue == Some(0L) || s.isEmpty) s
+        else Iterator(Zero) ++ Iterator.empty // dummy stream
+      }
+      expressionToYield = {
+        if (expression1.staticValue == Some(0L)) expression2
+        else if (expression1.staticValue == Some(1L)) expression3
+        else If(Op2(And, expression1, One), expression2, expression3)
+      }
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
       expressionToYield.staticValue.map(visited +=)
@@ -246,8 +258,8 @@ object ProgramGenerator {
     def exprStream =
       if (operators.contains(Tfold))
         getTFoldExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
-      else if(operators.contains(Bonus))
-        getBonusExpressions(size - 1, operators - Bonus, inputId, if (useAllOperators) operators else 0)
+      else if (operators.contains(Bonus))
+        getBonusExpressions(size - 1, operators, inputId, if (useAllOperators) operators else 0)
       else getExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
 
     exprStream.map(Program(inputId, _)).toStream
