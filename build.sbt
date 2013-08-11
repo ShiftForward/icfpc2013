@@ -10,7 +10,7 @@ startYear := Some(2013)
 
 scalaVersion := "2.10.2"
 
-scalacOptions := Seq("-deprecation", "-encoding", "utf8")
+scalacOptions := Seq("-deprecation", "-encoding", "utf8", "-optimize")
 
 resolvers ++= Seq(
   "spray repo" at "http://repo.spray.io",
