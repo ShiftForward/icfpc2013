@@ -181,14 +181,14 @@ object ProgramGenerator {
       size1 <- (4 to (size - 11)).toIterator // If, And, One, 4 for expression2 and 4 for expression3
       size2 <- 4 to (size - size1 - 7)
       size3 = size - size1 - size2 - 3
-      expression1 <- getExpressions(size1, operators - If0, Set(inputId), 0)
+      expression1 <- getExpressions(size1, operators, Set(inputId), 0)
       expression2 <- {
-        def s = getExpressions(size2, operators - If0, Set(inputId), 0)
+        def s = getExpressions(size2, operators, Set(inputId), 0)
         if (expression1.staticValue == Some(1L) || s.isEmpty) Iterator(Zero) ++ Iterator.empty // dummy stream
         else s
       }
       expression3 <- {
-        def s = getExpressions(size3, operators - If0, Set(inputId), requiredOperators & ~(1 << Bonus.id | 1 << If0.id | expression1.operatorIds | expression2.operatorIds))
+        def s = getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << Bonus.id | expression1.operatorIds | expression2.operatorIds))
         if (expression1.staticValue == Some(0L) || s.isEmpty) s
         else Iterator(Zero) ++ Iterator.empty // dummy stream
       }
