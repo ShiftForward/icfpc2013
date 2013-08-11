@@ -101,13 +101,15 @@ object ProgramGenerator {
       size2 <- 1 to (size - size1 - 2)
       size3 = size - size1 - size2 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
-      expression2 <- getExpressions(size2, operators, boundVariables, 0)
+      expression2 <- {
+        def s = getExpressions(size2, operators, boundVariables, 0)
+        if (expression1.staticValue == Some(0L) || s.isEmpty) s
+        else Iterator(Zero) ++ Iterator.empty // dummy stream
+      }
       expression3 <- {
         def s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
-        if (expression1.staticValue != Some(0L) || s.isEmpty)
-          s
-        else
-          Iterator(Zero) ++ Iterator.empty // dummy stream
+        if (expression1.staticValue != Some(0L) || s.isEmpty) s
+        else Iterator(Zero) ++ Iterator.empty // dummy stream
       }
       expressionToYield =
         if (expression1.staticValue == Some(0L))
