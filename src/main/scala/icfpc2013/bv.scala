@@ -163,6 +163,12 @@ object Plus extends Operator2 {
   val id = 11
 }
 
+object Bonus extends Operator {
+  override def toString = "bonus"
+  val staticSize = 0
+  val id = 12
+}
+
 object Operator {
   val N_OPERATORS = 12
 
@@ -179,6 +185,7 @@ object Operator {
     case "xor" => Xor
     case "plus" => Plus
     case "tfold" => Tfold
+    case "bonus" => Bonus
   }
 
   def apply(id: Int): Operator = id match {
@@ -194,6 +201,7 @@ object Operator {
     case Xor.id => Xor
     case Plus.id => Plus
     case Tfold.id => Tfold
+    case Bonus.id => Bonus
   }
 
   implicit def idsToSet(ids: Int): Set[Operator] = {
