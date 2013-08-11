@@ -9,9 +9,11 @@ import spray.util._
 
 import com.twitter.chill.KryoInjection
 
-object RainbowTableSolver extends Solver {
+case class RainbowTableSolver(dbName: String = "rainbow") extends Solver {
   type State = Option[Seq[(Expression, Long => Long)]]
   val initialState = None
+
+  val rainbowTable = RainbowTable(dbName)
 
   def solve(
     problemId: String,
@@ -19,7 +21,7 @@ object RainbowTableSolver extends Solver {
     ops: Set[Operator],
     inputId: Id = Id("x"),
     knownInputs: Map[Long, Long] = Map(),
-    state: State = initialState): (Map[Long, Long], State, Option[Expression]) = RainbowTable.db withSession {
+    state: State = initialState): (Map[Long, Long], State, Option[Expression]) = rainbowTable.db withSession {
 
     require(!(Query(RainbowTables).filter(_.problemId === problemId).list.isEmpty))
 

@@ -17,10 +17,9 @@ object RainbowTables extends Table[(String, Array[Byte], String)]("RAINBOW_TABLE
 }
 
 
-object RainbowTable {
+case class RainbowTable(dbName: String) {
   val ARG_NAME = "x"
-  val DB_NAME = "rainbow-test"
-  val db = Database.forURL(s"jdbc:sqlite:$DB_NAME.db", driver = "org.sqlite.JDBC")
+  val db = Database.forURL(s"jdbc:sqlite:$dbName.db", driver = "org.sqlite.JDBC")
   val windowSize = 10000
 
   val out = new ByteArrayOutputStream()
