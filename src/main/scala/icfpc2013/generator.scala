@@ -1,7 +1,7 @@
 package icfpc2013
 
 import scala.util.Random
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{Set => MutableSet, ListBuffer}
 import scala.math._
 import icfpc2013.Operator._
 
@@ -22,17 +22,25 @@ object ProgramGenerator {
     size: Int,
     operators: Set[Operator],
     boundVariables: Set[Id],
-    requiredOperators: Int): Stream[Expression] =
+    requiredOperators: Int): Stream[Expression] = {
+    val visited = MutableSet[Long]()
     for {
       operator <- operators.collect({ case x: Operator1 => x }).toStream
       expression <- getExpressions(size - 1, operators, boundVariables, requiredOperators & ~(1 << operator.id))
-    } yield Op1(operator, expression)
+      expressionToYield = Op1(operator, expression)
+      if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
+    } yield {
+      expressionToYield.staticValue.map(visited += _)
+      expressionToYield
+    }
+  }
 
   private[this] def getOp2Expressions(
     size: Int,
     operators: Set[Operator],
     boundVariables: Set[Id],
-    requiredOperators: Int): Stream[Expression] =
+    requiredOperators: Int): Stream[Expression] = {
+    val visited = MutableSet[Long]()
     for {
       operator <- operators.collect({ case x: Operator2 => x }).toStream
       size1 <- ceil((size - 1) / 2.0).toInt to (size - 2)
@@ -45,22 +53,29 @@ object ProgramGenerator {
         else
           Zero #:: Stream.empty // dummy stream
       }
+      expressionToYield = {
+        if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
+          Zero
+        else if (operator == Or && expression1.staticValue == Some(0L))
+          expression2
+        else if (operator == Or && expression2.staticValue == Some(0L))
+          expression1
+        else
+          Op2(operator, expression1, expression2)
+      }
+      if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
-        Zero
-      else if (operator == Or && expression1.staticValue == Some(0L))
-        expression2
-      else if (operator == Or && expression2.staticValue == Some(0L))
-        expression1
-      else
-        Op2(operator, expression1, expression2)
+      expressionToYield.staticValue.map(visited += _)
+      expressionToYield
     }
+  }
 
   private[this] def getIfExpressions(
     size: Int,
     operators: Set[Operator],
     boundVariables: Set[Id],
-    requiredOperators: Int): Stream[Expression] =
+    requiredOperators: Int): Stream[Expression] = {
+    val visited = MutableSet[Long]()
     if (!operators.contains(If0)) Stream.empty
     else for {
       size1 <- (1 to (size - 3)).toStream
@@ -75,43 +90,63 @@ object ProgramGenerator {
         else
           Zero #:: Stream.empty // dummy stream
       }
+      expressionToYield = {
+        if (expression1.staticValue == Some(0L))
+          expression2
+        else
+          If(expression1, expression2, expression3)
+      }
+      if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      if (expression1.staticValue == Some(0L))
-        expression2
-      else
-        If(expression1, expression2, expression3)
+      expressionToYield.staticValue.map(visited += _)
+      expressionToYield
     }
+  }
 
   private[this] def getFoldExpressions(
     size: Int,
     operators: Set[Operator],
     boundVariables: Set[Id],
-    requiredOperators: Int): Stream[Expression] =
+    requiredOperators: Int): Stream[Expression] = {
+    val visited = MutableSet[Long]()
+    val xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
+    val accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
     if (!operators.contains(Fold0)) Stream.empty
     else for {
       size1 <- (1 to (size - 4)).toStream
       size2 <- 1 to (size - size1 - 3)
       size3 = size - size1 - size2 - 2
-      xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
-      accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
       expression1 <- getExpressions(size1, operators - Fold0, boundVariables, 0)
       expression2 <- getExpressions(size2, operators - Fold0, boundVariables, 0)
       expression3 <- getExpressions(size3, operators - Fold0, boundVariables + accId + xId, requiredOperators & ~(1 << Fold0.id | expression1.operatorIds | expression2.operatorIds))
-    } yield Fold(expression1, expression2, xId, accId, expression3)
+      expressionToYield = Fold(expression1, expression2, xId, accId, expression3)
+      if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
+    } yield {
+      expressionToYield.staticValue.map(visited += _)
+      expressionToYield
+    }
+  }
 
   private[this] def getTFoldExpressions(
     size: Int,
     operators: Set[Operator],
     boundVariables: Set[Id],
-    requiredOperators: Int): Stream[Expression] =
+    requiredOperators: Int): Stream[Expression] = {
+    val visited = MutableSet[Long]()
     if (!operators.contains(Tfold)) Stream.empty
     else {
       val xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
       val accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
       for {
         expression <- getExpressions(size - 4, operators - Tfold, boundVariables + xId + accId, requiredOperators & ~(1 << Tfold.id))
-      } yield Fold(Id("x"), Zero, xId, accId, expression)
+        expressionToYield = Fold(Id("x"), Zero, xId, accId, expression)
+        if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
+      } yield {
+        expressionToYield.staticValue.map(visited += _)
+        expressionToYield
+      }
     }
+  }
 
   private[this] def getBonusExpressions(
     size: Int,
