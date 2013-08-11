@@ -152,7 +152,8 @@ object ProgramGenerator {
     size: Int,
     operators: Set[Operator],
     inputId: Id,
-    requiredOperators: Int): Stream[Expression] =
+    requiredOperators: Int): Stream[Expression] = {
+    val visited = MutableSet[Long]()
     for {
       size1 <- (4 to (size - 11)).toStream // If, And, One, 4 for expression2 and 4 for expression3
       size2 <- 4 to (size - size1 - 7)
@@ -160,7 +161,12 @@ object ProgramGenerator {
       expression1 <- getExpressions(size1, operators, Set(inputId), 0)
       expression2 <- getExpressions(size2, operators, Set(inputId), 0)
       expression3 <- getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
-    } yield If(Op2(And, expression1, One), expression2, expression3)
+      expressionToYield = If(Op2(And, expression1, One), expression2, expression3)
+      if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
+    } yield {
+      expressionToYield.staticValue.map(visited += _)
+      expressionToYield
+    }
 
   private[this] def getExpressions(
     size: Int,
