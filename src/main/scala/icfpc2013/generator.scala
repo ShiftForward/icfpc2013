@@ -116,3 +116,7 @@ object ProgramGenerator {
     exprStream.map(Program(inputId, _))
   }
 }
+
+object TestGenerator extends App {
+  BruteForceSolver.genSolveAndGuess(TrainRequest(Some(args(0).toInt), None))
+}

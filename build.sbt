@@ -27,3 +27,7 @@ initialCommands in console := """
       import icfpc2013.Client._;
       import spray.util._;
       import icfpc2013._;"""
+
+fork in run := true
+
+javaOptions in run ++= Seq("-Xmx4g", "-Xms4g", "-Xmn400M")
