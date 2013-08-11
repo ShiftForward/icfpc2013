@@ -114,6 +114,8 @@ object ProgramGenerator {
       expressionToYield =
         if (expression1.staticValue == Some(0L))
           expression2
+        else if (expression1.staticValue != Some(0L))
+          expression3
         else if (expression2 == expression3 || expression2.isStaticallyEqualTo(expression3))
           expression2
         else
@@ -182,20 +184,21 @@ object ProgramGenerator {
       size2 <- 4 to (size - size1 - 7)
       size3 = size - size1 - size2 - 3
       expression1 <- getExpressions(size1, operators, Set(inputId), 0)
+      andop = Op2(And, expression1, One)
       expression2 <- {
         def s = getExpressions(size2, operators, Set(inputId), 0)
-        if (expression1.staticValue == Some(1L) || s.isEmpty) Iterator(Zero) ++ Iterator.empty // dummy stream
+        if (andop.staticValue == Some(1L) || s.isEmpty) Iterator(Zero) ++ Iterator.empty // dummy stream
         else s
       }
       expression3 <- {
         def s = getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << Bonus.id | expression1.operatorIds | expression2.operatorIds))
-        if (expression1.staticValue == Some(0L) || s.isEmpty) s
+        if (andop.staticValue == Some(0L) || s.isEmpty) s
         else Iterator(Zero) ++ Iterator.empty // dummy stream
       }
       expressionToYield = {
-        if (expression1.staticValue == Some(0L)) expression2
-        else if (expression1.staticValue == Some(1L)) expression3
-        else If(Op2(And, expression1, One), expression2, expression3)
+        if (andop.staticValue == Some(0L)) expression2
+        else if (andop.staticValue == Some(1L)) expression3
+        else If(andop, expression2, expression3)
       }
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
