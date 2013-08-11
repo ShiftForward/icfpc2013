@@ -46,7 +46,7 @@ object BruteForceSolver extends Solver {
         inputsLong.zip(outputsLong).toMap
       }
 
-    def filteredStream = possiblePrograms.filter { program =>
+    lazy val filteredStream = possiblePrograms.filter { program =>
       inputsMap.forall { case (in, out) => program._2(in) == out }
     }
 
