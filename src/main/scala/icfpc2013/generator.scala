@@ -114,6 +114,10 @@ object ProgramGenerator {
           expression2
         else if (expression2 == expression3 || expression2.isStaticallyEqualTo(expression3))
           expression2
+        else if (expression3.staticValue == Some(0l) && (expression1 == expression2 || expression1.isStaticallyEqualTo(expression2)))
+          Zero
+        else if (expression2.staticValue == Some(0l) && (expression1 == expression3 || expression1.isStaticallyEqualTo(expression3)))
+          expression1
         else
           If(expression1, expression2, expression3)
 
