@@ -57,6 +57,10 @@ object ProgramGenerator {
         expression2
       else if (operator == And && expression2.staticValue == Some(-1L))
         expression1
+      else if (operator == Or && expression1.staticValue == Some(-1L))
+        expression1
+      else if (operator == Or && expression2.staticValue == Some(-1L))
+        expression2
       else if ((operator == Or || operator == Xor || operator == Plus) && expression1.staticValue == Some(0L))
         expression2
       else if ((operator == Or || operator == Xor || operator == Plus) && expression2.staticValue == Some(0L))
