@@ -1,20 +1,31 @@
 package icfpc2013
 
+import java.io._
+import java.util.zip._
 import scala.slick.driver.SQLiteDriver.simple._
 import Database.threadLocalSession
 
-object RainbowTables extends Table[(String, String, String)]("RAINBOW_TABLES") {
+import com.twitter.chill.KryoInjection
+
+object RainbowTables extends Table[(String, Array[Byte], String)]("RAINBOW_TABLES") {
   def problemId = column[String]("PROBLEM_ID")
-  def program = column[String]("PROGRAM")
+  def program = column[Array[Byte]]("PROGRAM")
   def outputHash = column[String]("OUTPUT_BITSET")
   def * = problemId ~ program ~ outputHash
+
+  def idx = index("idx_a", (problemId, outputHash))
 }
 
 
 object RainbowTable {
   val ARG_NAME = "x"
-  val DB_NAME = "rainbow"
+  val DB_NAME = "rainbow-test"
   val db = Database.forURL(s"jdbc:sqlite:$DB_NAME.db", driver = "org.sqlite.JDBC")
+  val windowSize = 10000
+
+  val out = new ByteArrayOutputStream()
+  val bos = new ByteArrayOutputStream()
+  val oos = new ObjectOutputStream(bos)
 
   def create = db withSession { RainbowTables.ddl.create }
 
@@ -28,8 +39,19 @@ object RainbowTable {
       StaticInput.long.map(program._2(_)).##
     }
 
-    programs.zip(hashes).foreach { case ((program, _), hash) =>
-      RainbowTables.insert(problemId, program.toString, hash.toString)
+    var i = 0
+    programs.zip(hashes).sliding(windowSize).foreach { st =>
+      RainbowTables.insertAll(
+        st.map { case ((program, _), hash) =>
+          val baos = new ByteArrayOutputStream()
+          val gzos = new GZIPOutputStream(baos)
+          gzos.write(KryoInjection(program))
+          gzos.close()
+          val bytes = baos.toByteArray
+
+          (problemId, bytes, hash.toString)
+        }: _*
+      )
     }
   }
 }

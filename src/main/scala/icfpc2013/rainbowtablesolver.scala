@@ -1,8 +1,13 @@
 package icfpc2013
 
+import java.io._
+import java.util.zip._
+import org.apache.commons.io.IOUtils
 import scala.slick.driver.SQLiteDriver.simple._
 import Database.threadLocalSession
 import spray.util._
+
+import com.twitter.chill.KryoInjection
 
 object RainbowTableSolver extends Solver {
   type State = Option[Seq[(Expression, Long => Long)]]
@@ -33,8 +38,18 @@ object RainbowTableSolver extends Solver {
     val possiblePrograms = state.getOrElse {
       (for {
         r <- RainbowTables if r.problemId === problemId && r.outputHash === outputHash.toString
-      } yield (r.program)).list.map { expression =>
-        val program = BvParser(expression).get
+      } yield (r.program)).list.map { bytes =>
+
+        val out = new ByteArrayOutputStream()
+        val bais = new ByteArrayInputStream(bytes)
+        val gzis = new GZIPInputStream(bais)
+
+        IOUtils.copy(gzis, out)
+        gzis.close()
+
+        // *gulp*
+        val program = KryoInjection.invert(out.toByteArray).toOption.get.asInstanceOf[Program]
+
         (program.e, BvCompiler(program))
       }
     }
