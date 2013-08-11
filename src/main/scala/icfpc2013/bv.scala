@@ -208,12 +208,13 @@ object Operator {
   }
 
   implicit def idsToSet(ids: Int): Set[Operator] = {
-    (0 until N_OPERATORS).foldLeft(Set[Operator]()) { (set, i) =>
-      if ((ids & (1 << i)) > 0)
-        set + Operator(i)
-      else
-        set
+    var i = 0
+    var set = Set[Operator]()
+    while (i < N_OPERATORS) {
+      if ((ids & (1 << i)) > 0) set += Operator(i)
+      i += 1
     }
+    set
   }
 
   implicit def setToIds(ops: Set[Operator]): Int =
