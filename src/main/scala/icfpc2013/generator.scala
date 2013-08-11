@@ -49,10 +49,10 @@ object ProgramGenerator {
     requiredOperators: Int): Iterator[Expression] = {
     val visited = HashSet[Long]()
     for {
-      operator <- operators.collect({ case x: Operator2 => x }).toIterator
-      size1 <- ceil((size - 1) / 2.0).toInt to (size - 2)
-      size2 = size - size1 - 1
+      size1 <- (ceil((size - 1) / 2.0).toInt to (size - 2)).toIterator
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
+      size2 = size - size1 - 1
+      operator <- operators.collect({ case x: Operator2 => x })
       expression2 <- {
         def s = getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
         if (operator != And || expression1.staticValue != Some(0L) || s.isEmpty)
@@ -98,10 +98,10 @@ object ProgramGenerator {
     if (!operators.contains(If0)) Iterator.empty
     else for {
       size1 <- (1 to (size - 3)).toIterator
-      size2 <- 1 to (size - size1 - 2)
-      size3 = size - size1 - size2 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
+      size2 <- 1 to (size - size1 - 2)
       expression2 <- getExpressions(size2, operators, boundVariables, 0)
+      size3 = size - size1 - size2 - 1
       expression3 <- {
         def s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
         if (expression1.staticValue != Some(0L) || s.isEmpty)
@@ -135,10 +135,10 @@ object ProgramGenerator {
     if (!operators.contains(Fold0)) Iterator.empty
     else for {
       size1 <- (1 to (size - 4)).toIterator
-      size2 <- 1 to (size - size1 - 3)
-      size3 = size - size1 - size2 - 2
       expression1 <- getExpressions(size1, operators - Fold0, boundVariables, 0)
+      size2 <- 1 to (size - size1 - 3)
       expression2 <- getExpressions(size2, operators - Fold0, boundVariables, 0)
+      size3 = size - size1 - size2 - 2
       expression3 <- getExpressions(size3, operators - Fold0, boundVariables + accId + xId, requiredOperators & ~(1 << Fold0.id | expression1.operatorIds | expression2.operatorIds))
       expressionToYield = Fold(expression1, expression2, xId, accId, expression3)
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
@@ -177,10 +177,10 @@ object ProgramGenerator {
     val visited = HashSet[Long]()
     for {
       size1 <- (4 to (size - 11)).toIterator // If, And, One, 4 for expression2 and 4 for expression3
-      size2 <- 4 to (size - size1 - 7)
-      size3 = size - size1 - size2 - 3
       expression1 <- getExpressions(size1, operators, Set(inputId), 0)
+      size2 <- 4 to (size - size1 - 7)
       expression2 <- getExpressions(size2, operators, Set(inputId), 0)
+      size3 = size - size1 - size2 - 3
       expression3 <- getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
       expressionToYield = If(Op2(And, expression1, One), expression2, expression3)
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
