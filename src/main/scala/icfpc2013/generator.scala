@@ -58,7 +58,7 @@ object ProgramGenerator {
         if (operator != And || expression1.staticValue != Some(0L) || s.isEmpty)
           s
         else
-          Iterator(Zero) ++ Stream.empty // dummy stream
+          Iterator(Zero)
       }
       expressionToYield = {
         if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
@@ -101,15 +101,15 @@ object ProgramGenerator {
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
       size2 <- 1 to (size - size1 - 2)
       expression2 <- {
-        def s = getExpressions(size2, operators, boundVariables, 0)
+        val s = getExpressions(size2, operators, boundVariables, 0)
         if (expression1.staticValue == Some(0L) || s.isEmpty) s
-        else Iterator(Zero) ++ Iterator.empty // dummy stream
+        else Iterator(Zero)
       }
       size3 = size - size1 - size2 - 1
       expression3 <- {
-        def s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
+        val s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
         if (expression1.staticValue != Some(0L) || s.isEmpty) s
-        else Iterator(Zero) ++ Iterator.empty // dummy stream
+        else Iterator(Zero)
       }
       expressionToYield =
         if (expression1.staticValue == Some(0L))
@@ -189,15 +189,15 @@ object ProgramGenerator {
       andop = Op2(And, expression1, One)
       size2 <- 4 to (size - size1 - 7)
       expression2 <- {
-        def s = getExpressions(size2, operators, Set(inputId), 0)
-        if (andop.staticValue == Some(1L) || s.isEmpty) Iterator(Zero) ++ Iterator.empty // dummy stream
+        val s = getExpressions(size2, operators, Set(inputId), 0)
+        if (andop.staticValue == Some(1L) || s.isEmpty) Iterator(Zero)
         else s
       }
       size3 = size - size1 - size2 - 3
       expression3 <- {
-        def s = getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << Bonus.id | expression1.operatorIds | expression2.operatorIds))
+        val s = getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << Bonus.id | expression1.operatorIds | expression2.operatorIds))
         if (andop.staticValue == Some(0L) || s.isEmpty) s
-        else Iterator(Zero) ++ Iterator.empty // dummy stream
+        else Iterator(Zero)
       }
       expressionToYield = {
         if (andop.staticValue == Some(0L)) expression2
