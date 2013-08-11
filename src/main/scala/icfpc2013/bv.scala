@@ -21,7 +21,7 @@ sealed trait Expression extends Any {
   } yield v1 == v2).getOrElse(false)
 }
 
-object Zero extends Expression {
+case object Zero extends Expression {
   override def toString = "0"
   def size = 1
   lazy val operators = Set[Operator]()
@@ -29,7 +29,7 @@ object Zero extends Expression {
   lazy val staticValue = Some(0L)
 }
 
-object One extends Expression {
+case object One extends Expression {
   override def toString = "1"
   def size = 1
   lazy val operators = Set[Operator]()
@@ -95,19 +95,19 @@ sealed trait Operator {
   def id: Int
 }
 
-object If0 extends Operator {
+case object If0 extends Operator {
   override def toString = "if0"
   val staticSize = 1
   val id = 0
 }
 
-object Tfold extends Operator {
+case object Tfold extends Operator {
   override def toString = "tfold"
   val staticSize = 2
   val id = 1
 }
 
-object Fold0 extends Operator {
+case object Fold0 extends Operator {
   override def toString = "fold"
   val staticSize = 2
   val id = 2
@@ -117,27 +117,27 @@ sealed trait Operator1 extends Operator {
   val staticSize = 1
 }
 
-object Not extends Operator1 {
+case object Not extends Operator1 {
   override def toString = "not"
   val id = 3
 }
 
-object Shl1 extends Operator1 {
+case object Shl1 extends Operator1 {
   override def toString = "shl1"
   val id = 4
 }
 
-object Shr1 extends Operator1 {
+case object Shr1 extends Operator1 {
   override def toString = "shr1"
   val id = 5
 }
 
-object Shr4 extends Operator1 {
+case object Shr4 extends Operator1 {
   override def toString = "shr4"
   val id = 6
 }
 
-object Shr16 extends Operator1 {
+case object Shr16 extends Operator1 {
   override def toString = "shr16"
   val id = 7
 }
@@ -146,27 +146,27 @@ sealed trait Operator2 extends Operator {
   val staticSize = 1
 }
 
-object And extends Operator2 {
+case object And extends Operator2 {
   override def toString = "and"
   val id = 8
 }
 
-object Or extends Operator2 {
+case object Or extends Operator2 {
   override def toString = "or"
   val id = 9
 }
 
-object Xor extends Operator2 {
+case object Xor extends Operator2 {
   override def toString = "xor"
   val id = 10
 }
 
-object Plus extends Operator2 {
+case object Plus extends Operator2 {
   override def toString = "plus"
   val id = 11
 }
 
-object Bonus extends Operator {
+case object Bonus extends Operator {
   override def toString = "bonus"
   val staticSize = 0
   val id = 12
@@ -208,12 +208,13 @@ object Operator {
   }
 
   implicit def idsToSet(ids: Int): Set[Operator] = {
-    (0 until N_OPERATORS).foldLeft(Set[Operator]()) { (set, i) =>
-      if ((ids & (1 << i)) > 0)
-        set + Operator(i)
-      else
-        set
+    var i = 0
+    var set = Set[Operator]()
+    while (i < N_OPERATORS) {
+      if ((ids & (1 << i)) > 0) set += Operator(i)
+      i += 1
     }
+    set
   }
 
   implicit def setToIds(ops: Set[Operator]): Int =
