@@ -1,11 +1,8 @@
 package icfpc2013
 
-import java.io._
-import java.util.zip._
 import scala.slick.driver.SQLiteDriver.simple._
 import Database.threadLocalSession
 
-import com.twitter.chill.KryoInjection
 
 object RainbowTables extends Table[(String, Array[Byte], String)]("RAINBOW_TABLES") {
   def problemId = column[String]("PROBLEM_ID")
@@ -13,24 +10,22 @@ object RainbowTables extends Table[(String, Array[Byte], String)]("RAINBOW_TABLE
   def outputHash = column[String]("OUTPUT_BITSET")
   def * = problemId ~ program ~ outputHash
 
-  def idx = index("idx_a", (problemId, outputHash))
+  def idx = index("idx_a", outputHash)
+  // def idx = index("idx_a", (problemId, outputHash))
 }
 
-
 case class RainbowTable(dbName: String) {
+  import Program._
+
   val ARG_NAME = "x"
   val db = Database.forURL(s"jdbc:sqlite:$dbName.db", driver = "org.sqlite.JDBC")
   val windowSize = 10000
 
-  val out = new ByteArrayOutputStream()
-  val bos = new ByteArrayOutputStream()
-  val oos = new ObjectOutputStream(bos)
-
   def create = db withSession { RainbowTables.ddl.create }
 
-  def generate(problemId: String, size: Int, ops: Set[Operator]) = db withSession {
+  def generate(problemId: String, size: Int, ops: Set[Operator], useAllOperators: Boolean = false) = db withSession {
     def programs =
-      ProgramGenerator.getPrograms(size, ops, Id(ARG_NAME), true).map { p =>
+      ProgramGenerator.getPrograms(size, ops, Id(ARG_NAME), useAllOperators).map { p =>
         (p, BvCompiler(p))
       }
 
@@ -42,13 +37,7 @@ case class RainbowTable(dbName: String) {
     programs.zip(hashes).sliding(windowSize).foreach { st =>
       RainbowTables.insertAll(
         st.map { case ((program, _), hash) =>
-          val baos = new ByteArrayOutputStream()
-          val gzos = new GZIPOutputStream(baos)
-          gzos.write(KryoInjection(program))
-          gzos.close()
-          val bytes = baos.toByteArray
-
-          (problemId, bytes, hash.toString)
+          (problemId, program: Array[Byte], hash.toString)
         }: _*
       )
     }
