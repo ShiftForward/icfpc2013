@@ -76,7 +76,7 @@ object ProgramGenerator {
           Zero #:: Stream.empty // dummy stream
       }
     } yield {
-      if (expression1.staticValue != Some(0L))
+      if (expression1.staticValue == Some(0L))
         expression2
       else
         If(expression1, expression2, expression3)
