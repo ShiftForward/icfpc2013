@@ -35,7 +35,7 @@ object ProgramGenerator {
       }
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited += _)
+      expressionToYield.staticValue.map(visited +=)
       expressionToYield
     }
   }
@@ -65,6 +65,10 @@ object ProgramGenerator {
           expression2
         else if (operator == And && expression2.staticValue == Some(-1L))
           expression1
+        else if (operator == Or && expression1.staticValue == Some(-1L))
+          expression1
+        else if (operator == Or && expression2.staticValue == Some(-1L))
+          expression2
         else if ((operator == Or || operator == Xor || operator == Plus) && expression1.staticValue == Some(0L))
           expression2
         else if ((operator == Or || operator == Xor || operator == Plus) && expression2.staticValue == Some(0L))
@@ -78,7 +82,7 @@ object ProgramGenerator {
       }
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited += _)
+      expressionToYield.staticValue.map(visited +=)
       expressionToYield
     }
   }
@@ -111,7 +115,7 @@ object ProgramGenerator {
       }
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited += _)
+      expressionToYield.staticValue.map(visited +=)
       expressionToYield
     }
   }
@@ -135,7 +139,7 @@ object ProgramGenerator {
       expressionToYield = Fold(expression1, expression2, xId, accId, expression3)
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited += _)
+      expressionToYield.staticValue.map(visited +=)
       expressionToYield
     }
   }
@@ -155,7 +159,7 @@ object ProgramGenerator {
         expressionToYield = Fold(Id("x"), Zero, xId, accId, expression)
         if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
       } yield {
-        expressionToYield.staticValue.map(visited += _)
+        expressionToYield.staticValue.map(visited +=)
         expressionToYield
       }
     }
@@ -177,7 +181,7 @@ object ProgramGenerator {
       expressionToYield = If(Op2(And, expression1, One), expression2, expression3)
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited += _)
+      expressionToYield.staticValue.map(visited +=)
       expressionToYield
     }
   }

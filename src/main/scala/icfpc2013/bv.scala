@@ -75,7 +75,6 @@ case class Op1(op: Operator1, x: Expression) extends Expression {
   def size = 1 + x.size
   lazy val operators = Set[Operator](op) union x.operators
   lazy val operatorIds = (1 << op.id) | x.operatorIds
-
   lazy val staticValue = x.staticValue.map { _ => BvCompiler(this)(Map()) }
 }
 
