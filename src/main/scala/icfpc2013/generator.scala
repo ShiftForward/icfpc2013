@@ -38,8 +38,23 @@ object ProgramGenerator {
       size1 <- ceil((size - 1) / 2.0).toInt to (size - 2)
       size2 = size - size1 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
-      expression2 <- getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
-    } yield Op2(operator, expression1, expression2)
+      expression2 <- {
+        def s = getExpressions(size2, operators, boundVariables, requiredOperators & ~(1 << operator.id | expression1.operatorIds))
+        if (operator != And || expression1.staticValue != Some(0L) || s.isEmpty)
+          s
+        else
+          Zero #:: Stream.empty // dummy stream
+      }
+    } yield {
+      if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
+        Zero
+      else if (operator == Or && expression1.staticValue == Some(0L))
+        expression2
+      else if (operator == Or && expression2.staticValue == Some(0L))
+        expression1
+      else
+        Op2(operator, expression1, expression2)
+    }
 
   private[this] def getIfExpressions(
     size: Int,
@@ -53,8 +68,19 @@ object ProgramGenerator {
       size3 = size - size1 - size2 - 1
       expression1 <- getExpressions(size1, operators, boundVariables, 0)
       expression2 <- getExpressions(size2, operators, boundVariables, 0)
-      expression3 <- getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
-    } yield If(expression1, expression2, expression3)
+      expression3 <- {
+        def s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
+        if (expression1.staticValue != Some(0L) || s.isEmpty)
+          s
+        else
+          Zero #:: Stream.empty // dummy stream
+      }
+    } yield {
+      if (expression1.staticValue != Some(0L))
+        expression2
+      else
+        If(expression1, expression2, expression3)
+    }
 
   private[this] def getFoldExpressions(
     size: Int,

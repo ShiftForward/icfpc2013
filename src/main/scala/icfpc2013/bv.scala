@@ -59,7 +59,11 @@ case class Fold(xs: Expression, z: Expression, x: Id, acc: Id, exp: Expression) 
 
   // this yields false None's; but in order to yield a static value, not only must xs and z be static,
   // but exp must only use x and acc variables - something not easily testable from here
-  lazy val staticValue = exp.staticValue
+  lazy val staticValue = for {
+    _ <- xs.staticValue
+    _ <- z.staticValue
+    staticValue <- exp.staticValue
+  } yield staticValue
 }
 
 case class Op1(op: Operator1, x: Expression) extends Expression {
