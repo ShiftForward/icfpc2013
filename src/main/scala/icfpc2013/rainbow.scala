@@ -19,12 +19,12 @@ object RainbowTable {
   def create = db withSession { RainbowTables.ddl.create }
 
   def generate(problemId: String, size: Int, ops: Set[Operator]) = db withSession {
-    val programs =
+    def programs =
       ProgramGenerator.getPrograms(size, ops, Id(ARG_NAME), true).map { p =>
         (p, BvCompiler(p))
       }
 
-    val hashes = programs.map { program =>
+    def hashes = programs.map { program =>
       StaticInput.long.map(program._2(_)).##
     }
 
