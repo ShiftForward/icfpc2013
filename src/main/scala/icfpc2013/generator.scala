@@ -84,7 +84,7 @@ object ProgramGenerator {
       }
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited +=)
+      expressionToYield.staticValue.foreach(visited +=)
       expressionToYield
     }
   }
@@ -119,7 +119,7 @@ object ProgramGenerator {
 
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited +=)
+      expressionToYield.staticValue.foreach(visited +=)
       expressionToYield
     }
   }
@@ -143,7 +143,7 @@ object ProgramGenerator {
       expressionToYield = Fold(expression1, expression2, xId, accId, expression3)
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited +=)
+      expressionToYield.staticValue.foreach(visited +=)
       expressionToYield
     }
   }
@@ -163,7 +163,7 @@ object ProgramGenerator {
         expressionToYield = Fold(Id("x"), Zero, xId, accId, expression)
         if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
       } yield {
-        expressionToYield.staticValue.map(visited +=)
+        expressionToYield.staticValue.foreach(visited +=)
         expressionToYield
       }
     }
@@ -185,7 +185,7 @@ object ProgramGenerator {
       expressionToYield = If(Op2(And, expression1, One), expression2, expression3)
       if expressionToYield.staticValue.isEmpty || !visited.contains(expressionToYield.staticValue.get)
     } yield {
-      expressionToYield.staticValue.map(visited +=)
+      expressionToYield.staticValue.foreach(visited +=)
       expressionToYield
     }
   }
@@ -200,12 +200,19 @@ object ProgramGenerator {
     else if (size == 1)
       getOp0Expressions(size, operators, boundVariables, requiredOperators)
     else {
-      if (cache.contains((size, requiredOperators))) cache((size, requiredOperators)).toIterator
+      if (cache.contains((size, requiredOperators)))
+        cache((size, requiredOperators)).toIterator
       else {
-        getOp1Expressions(size, operators, boundVariables, requiredOperators) ++
-        getOp2Expressions(size, operators, boundVariables, requiredOperators) ++
-        getIfExpressions(size, operators, boundVariables, requiredOperators) ++
-        getFoldExpressions(size, operators, boundVariables, requiredOperators)
+        val exps = getOp1Expressions(size, operators, boundVariables, requiredOperators) ++
+                   getOp2Expressions(size, operators, boundVariables, requiredOperators) ++
+                   getIfExpressions(size, operators, boundVariables, requiredOperators) ++
+                   getFoldExpressions(size, operators, boundVariables, requiredOperators)
+
+        if (size < 11) {
+          val result = exps.toSet
+          cache += ((size, requiredOperators) -> result)
+          result.toIterator
+        } else exps
       }
     }
 
@@ -223,24 +230,10 @@ object ProgramGenerator {
     size: Int,
     operators: Set[Operator],
     inputId: Id,
-    useAllOperators: Boolean = false, cacheSize: Int = 11): Stream[Program] = {
+    useAllOperators: Boolean = false): Stream[Program] = {
 
     cache = MutableHashMap[(Int, Int), Set[Expression]]()
 
-    println("Heating up the caches...")
-    val theCacheSize = if (operators.contains(Tfold)) cacheSize + 2 else cacheSize
-
-    (2 to theCacheSize).foreach { iSize =>
-      cache += ((iSize - 1, operators: Int) ->
-        (if (operators.contains(Tfold))
-          getTFoldExpressions(iSize - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
-        else if(operators.contains(Bonus))
-          getBonusExpressions(iSize - 1, operators - Bonus, inputId, if (useAllOperators) operators else 0)
-        else getExpressions(iSize - 1, operators, Set(inputId), if (useAllOperators) operators else 0)).toSet
-      )
-    }
-
-    println("Solving...")
     def exprStream =
       if (operators.contains(Tfold))
         getTFoldExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
@@ -248,7 +241,7 @@ object ProgramGenerator {
         getBonusExpressions(size - 1, operators - Bonus, inputId, if (useAllOperators) operators else 0)
       else getExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
 
-    exprStream.map(Program(inputId, _)).toStream
+    exprStream.toStream.map(Program(inputId, _))
   }
 }
 
