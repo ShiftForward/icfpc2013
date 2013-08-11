@@ -1,7 +1,7 @@
 package icfpc2013
 
 import scala.util.Random
-import scala.collection.mutable.{Set => MutableSet, ListBuffer}
+import scala.collection.mutable.{HashSet, ListBuffer}
 import scala.math._
 import icfpc2013.Operator._
 
@@ -23,7 +23,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Int): Stream[Expression] = {
-    val visited = MutableSet[Long]()
+    val visited = HashSet[Long]()
     for {
       operator <- operators.collect({ case x: Operator1 => x }).toStream
       expression <- getExpressions(size - 1, operators, boundVariables, requiredOperators & ~(1 << operator.id))
@@ -40,7 +40,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Int): Stream[Expression] = {
-    val visited = MutableSet[Long]()
+    val visited = HashSet[Long]()
     for {
       operator <- operators.collect({ case x: Operator2 => x }).toStream
       size1 <- ceil((size - 1) / 2.0).toInt to (size - 2)
@@ -75,7 +75,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Int): Stream[Expression] = {
-    val visited = MutableSet[Long]()
+    val visited = HashSet[Long]()
     if (!operators.contains(If0)) Stream.empty
     else for {
       size1 <- (1 to (size - 3)).toStream
@@ -108,7 +108,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Int): Stream[Expression] = {
-    val visited = MutableSet[Long]()
+    val visited = HashSet[Long]()
     val xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
     val accId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
     if (!operators.contains(Fold0)) Stream.empty
@@ -132,7 +132,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Int): Stream[Expression] = {
-    val visited = MutableSet[Long]()
+    val visited = HashSet[Long]()
     if (!operators.contains(Tfold)) Stream.empty
     else {
       val xId = Id("x_" + { val v = randIds.head; randIds -= v; randIds += v; v })
@@ -153,7 +153,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     inputId: Id,
     requiredOperators: Int): Stream[Expression] = {
-    val visited = MutableSet[Long]()
+    val visited = HashSet[Long]()
     for {
       size1 <- (4 to (size - 11)).toStream // If, And, One, 4 for expression2 and 4 for expression3
       size2 <- 4 to (size - size1 - 7)
