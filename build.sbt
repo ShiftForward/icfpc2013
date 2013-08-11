@@ -21,7 +21,10 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"   %% "akka-actor"    % "2.2.0",
   "io.spray"             % "spray-client"  % "1.2-20130710",
   "org.apache.commons"   % "commons-math3" % "3.2",
-  "io.spray"            %% "spray-json"    % "1.2.5")
+  "io.spray"            %% "spray-json"    % "1.2.5",
+  "com.typesafe.slick"  %% "slick"         % "1.0.1",
+  "org.slf4j"            % "slf4j-nop"     % "1.6.4",
+  "org.xerial"           % "sqlite-jdbc"   % "3.7.2")
 
 initialCommands in console := """
       import icfpc2013.Client._;
