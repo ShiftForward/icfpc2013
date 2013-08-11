@@ -167,6 +167,7 @@ object ProgramGenerator {
       expressionToYield.staticValue.map(visited += _)
       expressionToYield
     }
+  }
 
   private[this] def getExpressions(
     size: Int,
