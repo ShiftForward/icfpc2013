@@ -58,7 +58,7 @@ object ProgramGenerator {
         if (operator != And || expression1.staticValue != Some(0L) || s.isEmpty)
           s
         else
-          Iterator(Zero) ++ Stream.empty // dummy stream
+          Iterator(Zero)
       }
       expressionToYield = {
         if (operator == And && (expression1.staticValue == Some(0L) || expression2.staticValue == Some(0L)))
@@ -103,11 +103,9 @@ object ProgramGenerator {
       expression2 <- getExpressions(size2, operators, boundVariables, 0)
       size3 = size - size1 - size2 - 1
       expression3 <- {
-        def s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
-        if (expression1.staticValue != Some(0L) || s.isEmpty)
-          s
-        else
-          Iterator(Zero) ++ Iterator.empty // dummy stream
+        val s = getExpressions(size3, operators, boundVariables, requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
+        if (expression1.staticValue != Some(0L) || s.isEmpty) s
+        else Iterator(Zero)
       }
       expressionToYield =
         if (expression1.staticValue == Some(0L))
