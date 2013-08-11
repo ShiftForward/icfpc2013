@@ -191,7 +191,7 @@ object ProgramGenerator {
     operators: Set[Operator],
     boundVariables: Set[Id],
     requiredOperators: Int): Stream[Expression] =
-    if (size <= 0 || requiredOperators.map(_.staticSize).sum >= size)
+    if (size <= 0 || sumStaticSize(requiredOperators.toSeq) >= size)
       Stream.empty
     else if (size == 1)
       getOp0Expressions(size, operators, boundVariables, requiredOperators)
@@ -201,6 +201,16 @@ object ProgramGenerator {
       getIfExpressions(size, operators, boundVariables, requiredOperators) #:::
       getFoldExpressions(size, operators, boundVariables, requiredOperators)
     }
+
+  @inline private[this] def sumStaticSize(s: Seq[Operator]): Int = {
+    var i = 0
+    var res = 0
+    while (i < s.size) {
+      res += s(i).staticSize
+      i += 1
+    }
+    res
+  }
 
   def getPrograms(
     size: Int,
