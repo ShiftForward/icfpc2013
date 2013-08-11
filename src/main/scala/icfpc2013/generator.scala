@@ -1,12 +1,13 @@
 package icfpc2013
 
 import scala.util.Random
-import scala.collection.mutable.{HashSet, ListBuffer}
+import scala.collection.mutable.{HashSet, ListBuffer, HashMap => MutableHashMap}
 import scala.math._
 import icfpc2013.Operator._
 
 object ProgramGenerator {
   private[this] val randIds: ListBuffer[Int] = Random.shuffle(1 to 100000).to[ListBuffer]
+  private[this] var cache = MutableHashMap[(Int, Int), Set[Expression]]()
 
   private[this] def getOp0Expressions(
     size: Int,
@@ -198,17 +199,37 @@ object ProgramGenerator {
     else if (size == 1)
       getOp0Expressions(size, operators, boundVariables, requiredOperators)
     else {
-      getOp1Expressions(size, operators, boundVariables, requiredOperators) #:::
-      getOp2Expressions(size, operators, boundVariables, requiredOperators) #:::
-      getIfExpressions(size, operators, boundVariables, requiredOperators) #:::
-      getFoldExpressions(size, operators, boundVariables, requiredOperators)
+      if (cache.contains((size, requiredOperators))) cache((size, requiredOperators)).toStream
+      else {
+        getOp1Expressions(size, operators, boundVariables, requiredOperators) #:::
+        getOp2Expressions(size, operators, boundVariables, requiredOperators) #:::
+        getIfExpressions(size, operators, boundVariables, requiredOperators) #:::
+        getFoldExpressions(size, operators, boundVariables, requiredOperators)
+      }
     }
 
   def getPrograms(
     size: Int,
     operators: Set[Operator],
     inputId: Id,
-    useAllOperators: Boolean = false): Stream[Program] = {
+    useAllOperators: Boolean = false, cacheSize: Int = 11): Stream[Program] = {
+
+    cache = MutableHashMap[(Int, Int), Set[Expression]]()
+
+    println("Heating up the caches...")
+    val theCacheSize = if (operators.contains(Tfold)) cacheSize + 2 else cacheSize
+
+    (2 to theCacheSize).foreach { iSize =>
+      cache += ((iSize - 1, operators: Int) ->
+        (if (operators.contains(Tfold))
+          getTFoldExpressions(iSize - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
+        else if(operators.contains(Bonus))
+          getBonusExpressions(iSize - 1, operators - Bonus, inputId, if (useAllOperators) operators else 0)
+        else getExpressions(iSize - 1, operators, Set(inputId), if (useAllOperators) operators else 0)).toSet
+      )
+    }
+
+    println("Solving...")
     def exprStream =
       if (operators.contains(Tfold))
         getTFoldExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
