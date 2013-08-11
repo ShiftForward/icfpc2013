@@ -87,6 +87,20 @@ object ProgramGenerator {
       } yield Fold(Id("x"), Zero, xId, accId, expression)
     }
 
+  private[this] def getBonusExpressions(
+    size: Int,
+    operators: Set[Operator],
+    inputId: Id,
+    requiredOperators: Int): Stream[Expression] =
+    for {
+      size1 <- (4 to (size - 11)).toStream // If, And, One, 4 for expression2 and 4 for expression3
+      size2 <- 4 to (size - size1 - 7)
+      size3 = size - size1 - size2 - 3
+      expression1 <- getExpressions(size1, operators, Set(inputId), 0)
+      expression2 <- getExpressions(size2, operators, Set(inputId), 0)
+      expression3 <- getExpressions(size3, operators, Set(inputId), requiredOperators & ~(1 << If0.id | expression1.operatorIds | expression2.operatorIds))
+    } yield If(Op2(And, expression1, One), expression2, expression3)
+
   private[this] def getExpressions(
     size: Int,
     operators: Set[Operator],
@@ -111,6 +125,8 @@ object ProgramGenerator {
     def exprStream =
       if (operators.contains(Tfold))
         getTFoldExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
+      else if(operators.contains(Bonus))
+        getBonusExpressions(size - 1, operators - Bonus, inputId, if (useAllOperators) operators else 0)
       else getExpressions(size - 1, operators, Set(inputId), if (useAllOperators) operators else 0)
 
     exprStream.map(Program(inputId, _))
