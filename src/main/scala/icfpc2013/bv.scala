@@ -1,5 +1,9 @@
 package icfpc2013
 
+import com.twitter.chill.KryoInjection
+import java.io._
+import java.util.zip._
+
 case class Program(id: Id, e: Expression) {
   override def toString = s"(lambda ($id) $e)"
   def size = 1 + e.size
@@ -8,6 +12,16 @@ case class Program(id: Id, e: Expression) {
     case _ => e.operators
   }
   def staticValue = e.staticValue
+}
+
+object Program {
+  implicit def programToBytes(p: Program): Array[Byte] = {
+    val baos = new ByteArrayOutputStream()
+    val gzos = new GZIPOutputStream(baos)
+    gzos.write(KryoInjection(p))
+    gzos.close()
+    baos.toByteArray
+  }
 }
 
 sealed trait Expression extends Any {
