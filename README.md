@@ -12,10 +12,10 @@ This is Guru Meditation's entry to the
 
 ## Who we are
 
-* André Silva (ShiftForward)
-* Hugo Sereno Ferreira (ShiftForward, FEUP)
-* Joao Azevedo (ShiftForward)
-* Rui Gonçalves (ShiftForward)
+* André Silva ([ShiftForward][shiftforward])
+* Hugo Sereno Ferreira ([ShiftForward][shiftforward], [FEUP][feup])
+* Joao Azevedo ([ShiftForward][shiftforward])
+* Rui Gonçalves ([ShiftForward][shiftforward])
 
 ## Some statistics
 
@@ -109,6 +109,8 @@ Overall, We believe we had a lot more fun than initially thought after reading
 the problem statement, and the experience of this year's contest was very
 positive.
 
+[feup]: http://www.fe.up.pt
+[shiftforward]: http://shiftforward.eu
 [akka]: http://akka.io/
 [spray.io]: http://spray.io/
 [seq-comp]: http://docs.scala-lang.org/tutorials/tour/sequence-comprehensions.html
