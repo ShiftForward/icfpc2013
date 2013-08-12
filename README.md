@@ -50,17 +50,17 @@ solve all problems of size up to 8 with that preliminary version. We dedicated
 the major part of Saturday (and Sunday, for that matter) optimizing the
 generator, by avoiding the creation of syntactically (and semantically) equal
 programs. We avoided the generation of repeated expressions in binary operations
-(that were all comutative), and dealt with the absorbing elements of the various
-operators. By the end of Saturday, each of our expressions had a `staticValue`
-property that would hold, if the expression didn't have variables, the value
-that was able to be computed from it. With those optimizations, by the end of
-the day we were able to solve all problems of size up to 12. Also during that
-day, we came across the idea of generating a sort of [rainbow tables][rainbow],
-that would map the hash of outputs of a collection of known inputs to generated
-programs, so that a matching program could be found by simply comparing hashes
-of outputs. We implemented a preliminary version of them during that night, and
-left it running while we slept, but turned out we had huge bottlenecks inserting
-to a SQLite database, so that did us no good.
+(that were all commutative), and dealt with the absorbing elements of the
+various operators. By the end of Saturday, each of our expressions had a
+`staticValue` property that would hold, if the expression didn't have variables,
+the value that was able to be computed from it. With those optimizations, by the
+end of the day we were able to solve all problems of size up to 12. Also during
+that day, we came across the idea of generating a sort of
+[rainbow tables][rainbow], that would map the hash of outputs of a collection of
+known inputs to generated programs, so that a matching program could be found by
+simply comparing hashes of outputs. We implemented a preliminary version of them
+during that night, and left it running while we slept, but turned out we had
+huge bottlenecks inserting to a SQLite database, so that did us no good.
 
 ### Sunday
 
