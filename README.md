@@ -21,7 +21,7 @@ This is Guru Meditation's entry to the
 
 * **629** problems solved;
 * **1068** lines of Scala;
-* ~**30** hours spent working on the contest, from 9 to 11 August.
+* **30** hours spent working on the contest, from 9 to 11 August.
 
 ## Our approach
 
