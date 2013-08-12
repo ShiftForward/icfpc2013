@@ -93,7 +93,7 @@ solution size was around 9. We also didn't have a proper strategy to handle the
 bonus problems. We were able to figure out their structure, and include it in
 our generator, but we didn't come up with the idea of transforming bonus
 problems in the problem of generating two different (and smaller) programs that
-together, and with the proper if condition, would generate the target program.
+together, and with the proper `if` condition, would generate the target program.
 
 Overall, I believe we had a lot more fun than initially thought after reading
 the problem statement, and the experience of this year's contest was very
