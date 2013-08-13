@@ -94,7 +94,7 @@ We attempted to took advantage of some identities to reduce the search space, pa
 
 * Commutativity of `and/or/xor/plus`;
 * Double negation `(not (not x)) == x`;
-* Neutral elements (e.g. 0, 0xFFFFFFFFFFFFFFFF) `and/or/xor/plus/shl1/shr1/shr4/shr16`;
+* Neutral elements (e.g. `0`, `0xFFFFFFFFFFFFFFFF`) `and/or/xor/plus/shl1/shr1/shr4/shr16`;
 * De Morgan Laws;
 * Same parameters in binary ops `xor/and/or`;
 * IFs: `(if0 a a 0) == 0`, `(if0 a 0 a) == a` and `(if0 a b b) == b`.
