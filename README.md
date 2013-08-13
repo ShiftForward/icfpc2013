@@ -88,6 +88,19 @@ the solver running with only the programs it had on the table, avoiding the
 costly step of generating new ones. That yielded us around 170 extra points, but
 we ran out of time with a massive remaining of about 998.
 
+### Optimizations
+
+We attempted to took advantage of some identities to reduce the search space, particularly:
+
+* Commutativity of `and/or/xor/plus`;
+* Double negation `(not (not x)) == x`;
+* Neutral elements (e.g. 0, 0xFFFFFFFFFFFFFFFF) `and/or/xor/plus/shl1/shr1/shr4/shr16`;
+* De Morgan Laws;
+* Same parameters in binary ops `xor/and/or`;
+* IFs: `(if0 a a 0) == 0`, `(if0 a 0 a) == a` and `(if0 a b b) == b`.
+ 
+And a couple more...
+
 ### Post-contest
 
 By the end of the contest, we were regretting the fact that we didn't start
